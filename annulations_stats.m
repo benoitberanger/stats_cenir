@@ -63,6 +63,11 @@ hdr = {
     'diff_cancel_start(d)'
     };
 
+md10 = 9.90;
+pd10 = 10.10;
+
+[years,~,month2year] = unique(allMonths.vect(:,1));
+
 %% Fetch protocole
 
 [C,ia,ic] = unique(txt(:,11),'stable');
@@ -126,8 +131,8 @@ for n = 1 : length(proto_name)
         perProtocol.(proto_name{n}).total.manual.raw = raw(perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
         
         % m10 p10
-        perProtocol.(proto_name{n}).total.m10 = sum(cell2mat(perProtocol.(proto_name{n}).total.raw(:,21)) < 9.85  );
-        perProtocol.(proto_name{n}).total.p10 = sum(cell2mat(perProtocol.(proto_name{n}).total.raw(:,21)) > 10.15 );
+        perProtocol.(proto_name{n}).total.m10 = sum(cell2mat(perProtocol.(proto_name{n}).total.raw(:,21)) < md10  );
+        perProtocol.(proto_name{n}).total.p10 = sum(cell2mat(perProtocol.(proto_name{n}).total.raw(:,21)) > pd10 );
         
     catch err
         
@@ -135,7 +140,7 @@ for n = 1 : length(proto_name)
         continue
         
     end
-
+    
 end
 
 % Re-order
@@ -154,7 +159,7 @@ for n = 1 : countFileds
     
     count = count + perProtocol.(nameFields{n}).total.count;
     
-    outputLINE = [outputLINE ; perProtocol.(nameFields{n}).total.raw ];
+    outputLINE = [outputLINE ; perProtocol.(nameFields{n}).total.raw ]; %#ok<AGROW>
     
 end
 
@@ -162,7 +167,7 @@ end
 outputXLS = outputLINE(:,[ 10 11 18 19 21]);
 
 
-%% Prepare p10 auto m10 
+%% Prepare p10 auto m10
 
 output10= struct;
 output10.hdr = {'proto','total','m10','auto','p10'};
@@ -200,6 +205,108 @@ p10Order = flipud(p10Order);
 output10.p10 = output10.abcd(p10Order,:);
 
 
+%% Save
+
+try
+    delete('check_annulation.xls')
+catch err
+    warning(err.message)
+end
+% xlswrite('check_annulation',outputXLS)
+
+
+%% Split data for each protocol using month
+
+for n = 1 : countFileds
+    
+    perProtocol.(nameFields{n}).vect = allMonths.vect(:,1:2);
+    
+    for m = 1 : length(allMonths.unix) - 1
+        
+        protoInMonth = find( strcmp(allMonths.data.(allMonths.str(m,:)).txt(:,11),nameFields{n}) );
+        
+        perProtocol.(nameFields{n}).vect(m,3) = length( protoInMonth );
+        perProtocol.(nameFields{n}).vect(m,4) = sum( allMonths.data.(allMonths.str(m,:)).num(protoInMonth,21) < md10  );
+        perProtocol.(nameFields{n}).vect(m,5) = sum( strcmp( allMonths.data.(allMonths.str(m,:)).raw(protoInMonth,10) , 'auto' ) );
+        perProtocol.(nameFields{n}).vect(m,6) = sum( allMonths.data.(allMonths.str(m,:)).num(protoInMonth,21) > pd10  );
+        
+        
+    end
+    
+end
+
+
+%% Plot perProtocol
+
+if 1
+    
+    protoToPlot = 'ICEBERG';
+    
+    plot_count = 0;
+    ax = zeros(length(years),4);
+    
+    allMaxes.total = max( perProtocol.(protoToPlot).vect(:,3) );
+    allMaxes.m10 = max( perProtocol.(protoToPlot).vect(:,4) );
+    allMaxes.auto = max( perProtocol.(protoToPlot).vect(:,5) );
+    allMaxes.p10 = max( perProtocol.(protoToPlot).vect(:,6) );
+    
+    if allMaxes.total == 0
+        allMaxes.total = 1;
+    end
+    if allMaxes.m10 == 0
+        allMaxes.m10 = 1;
+    end
+    if allMaxes.auto == 0
+        allMaxes.auto = 1;
+    end
+    if allMaxes.p10 == 0
+        allMaxes.p10 = 1;
+    end
+    
+    figure
+    
+    for y = 1 : length(years)
+        
+        yearIndex = find( perProtocol.(protoToPlot).vect(:,1) == years(y) );
+        timeVect = 1:length( yearIndex );
+        
+        plot_count = plot_count + 1;
+        ax(y,1) = subplot(length(years),4,plot_count);
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,3))
+        if y == 1 , title('total') , end
+        ylabel(sprintf('%d',years(y)))
+        
+        plot_count = plot_count + 1;
+        ax(y,2) = subplot(length(years),4,plot_count);
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,4))
+        if y == 1 , title('m10') , end
+        
+        plot_count = plot_count + 1;
+        ax(y,3) = subplot(length(years),4,plot_count);
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,5))
+        if y == 1 , title('auto') , end
+        
+        plot_count = plot_count + 1;
+        ax(y,4) = subplot(length(years),4,plot_count);
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,6))
+        if y == 1 , title('p10') , end
+        
+    end
+    
+    axis(ax(:),'tight')
+    
+    for y = 1 : length(years)
+        ylim(ax(y,1),[0 allMaxes.total])
+        ylim(ax(y,2),[0 allMaxes.m10])
+        ylim(ax(y,3),[0 allMaxes.auto])
+        ylim(ax(y,4),[0 allMaxes.p10])
+    end
+    
+    linkaxes(ax,'x')
+    
+end
+
+
 %% Split data for each month
 
 perMonth.total = nan( size( allMonths.str , 1) , 1 );
@@ -210,12 +317,12 @@ perMonth.p10 = perMonth.total;
 for m = 1 : size( allMonths.str , 1) - 1
     
     perMonth.total(m) = length( allMonths.data.(allMonths.str(m,:)).idx );
-    perMonth.m10(m) = sum(cell2mat(allMonths.data.(allMonths.str(m,:)).raw(:,21)) < 9.85  );
+    perMonth.m10(m) = sum(cell2mat(allMonths.data.(allMonths.str(m,:)).raw(:,21)) < md10  );
     
     auto_idx = strcmp(allMonths.data.(allMonths.str(m,:)).raw(:,10),'auto');
     perMonth.auto(m) = sum(auto_idx);
     
-    perMonth.p10(m) = sum(cell2mat(allMonths.data.(allMonths.str(m,:)).raw(:,21)) > 10.15  );
+    perMonth.p10(m) = sum(cell2mat(allMonths.data.(allMonths.str(m,:)).raw(:,21)) > pd10  );
     
 end
 
@@ -223,31 +330,29 @@ end
 %% Plot perMonths
 
 % timeVect = 1:size(allMonths.str,1);
-% 
+%
 % ax(1) = subplot(4,1,1);
 % plot(timeVect,perMonth.total)
-% 
+%
 % ax(2) = subplot(4,1,2);
 % plot(timeVect,perMonth.m10)
-% 
+%
 % ax(3) = subplot(4,1,3);
 % plot(timeVect,perMonth.auto)
-% 
+%
 % ax(4) = subplot(4,1,4);
 % plot(timeVect,perMonth.p10)
-% 
+%
 % % set(ax,'XTick',timeVect)
 % % xticklabel = get(ax,'XTickLabel');
 % % xticklabel = cellstr(xticklabel{1,:});
 % % str = cellstr(allMonths.str);
 % % set(ax(end),'XTickLabel', str( str2double( xticklabel ) ) )
-% 
+%
 % linkaxes(ax,'x')
 
 
 %% Regroup per year
-
-[years,~,month2year] = unique(allMonths.vect(:,1));
 
 perYears = struct;
 for y = 1 : length(years)
@@ -274,58 +379,50 @@ end
 
 %% Plot perYears
 
-plot_count = 0;
-for y = 1 : length(years)
+if 0
     
-    timeVect = 1:length(perYears.(sprintf('y%d',years(y))).total);
+    plot_count = 0;
+    ax = zeros(length(years),4);
     
-    plot_count = plot_count + 1;
-    ax(y,1) = subplot(length(years),4,plot_count);
-    plot(timeVect,perYears.(sprintf('y%d',years(y))).total)
-%     ylim([0 max(allMaxes.total)])
-    if y == 1 , title('total') , end
-    ylabel(sprintf('%d',years(y)))
+    figure
     
-    plot_count = plot_count + 1;
-    ax(y,2) = subplot(length(years),4,plot_count);
-    plot(timeVect,perYears.(sprintf('y%d',years(y))).m10)
-%     ylim([0 max(allMaxes.m10)])
-    if y == 1 , title('m10') , end
+    for y = 1 : length(years)
+        
+        timeVect = 1:length(perYears.(sprintf('y%d',years(y))).total);
+        
+        plot_count = plot_count + 1;
+        ax(y,1) = subplot(length(years),4,plot_count);
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).total)
+        if y == 1 , title('total') , end
+        ylabel(sprintf('%d',years(y)))
+        
+        plot_count = plot_count + 1;
+        ax(y,2) = subplot(length(years),4,plot_count);
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).m10)
+        if y == 1 , title('m10') , end
+        
+        plot_count = plot_count + 1;
+        ax(y,3) = subplot(length(years),4,plot_count);
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).auto)
+        if y == 1 , title('auto') , end
+        
+        plot_count = plot_count + 1;
+        ax(y,4) = subplot(length(years),4,plot_count);
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).p10)
+        if y == 1 , title('p10') , end
+        
+    end
     
-    plot_count = plot_count + 1;
-    ax(y,3) = subplot(length(years),4,plot_count);
-    plot(timeVect,perYears.(sprintf('y%d',years(y))).auto)
-%     ylim([0 max(allMaxes.auto)])
-    if y == 1 , title('auto') , end
+    axis(ax(:),'tight')
     
-    plot_count = plot_count + 1;
-    ax(y,4) = subplot(length(years),4,plot_count);
-    plot(timeVect,perYears.(sprintf('y%d',years(y))).p10)
-%     ylim([0 max(allMaxes.p10)])
-    if y == 1 , title('p10') , end
+    for y = 1 : length(years)
+        ylim(ax(y,1),[0 max(allMaxes.total)])
+        ylim(ax(y,2),[0 max(allMaxes.m10)])
+        ylim(ax(y,3),[0 max(allMaxes.auto)])
+        ylim(ax(y,4),[0 max(allMaxes.p10)])
+    end
+    
+    linkaxes(ax,'x')
     
 end
-
-axis(ax(:),'tight')
-
-for y = 1 : length(years)
-    
-    ylim(ax(y,1),[0 max(allMaxes.total)])
-    ylim(ax(y,2),[0 max(allMaxes.m10)])
-    ylim(ax(y,3),[0 max(allMaxes.auto)])
-    ylim(ax(y,4),[0 max(allMaxes.p10)]) 
-    
-end
-
-linkaxes(ax,'x')
-
-
-%% Save
-
-try
-    delete('check_annulation.xls')
-catch err
-    warning(err.message)
-end
-% xlswrite('check_annulation',outputXLS)
 
