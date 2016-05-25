@@ -242,7 +242,7 @@ end
 
 %% Plot perProtocol
 
-protoToPlot = 'IMAGEN';
+protoToPlot = 'MEMENTO';
 
 
 %% 1 year = 1 graph
@@ -577,8 +577,7 @@ if 1
     
     ax = zeros(4,1);
     
-    figure('Name','allYears','NumberTitle','off')
-    
+    figure('Name','allYears','NumberTitle','off') 
     
     sp1 = 4 ;
     sp2 = 1 ;
@@ -588,34 +587,21 @@ if 1
     ax(1) = subplot(sp1,sp2,1);
     plot(ax(1),timeVect,perMonth.total,'LineWidth',lw)
     title('total')
-    for y = 1 : length(years)-1
-        text(timeVect(y*12),perMonth.total(timeVect(y*12)),num2str(years(y)),...
-            'HorizontalAlignment','center','VerticalAlignment','top')
-    end
     
     ax(2) = subplot(sp1,sp2,2);
     plot(ax(2),timeVect,perMonth.m10,'LineWidth',lw)
     title('m10')
-    for y = 1 : length(years)-1
-        text(timeVect(y*12),perMonth.m10(timeVect(y*12)),num2str(years(y)),...
-            'HorizontalAlignment','center','VerticalAlignment','top')
-    end
     
     ax(3) = subplot(sp1,sp2,3);
     plot(ax(3),timeVect,perMonth.auto,'LineWidth',lw)
     title('auto')
-    for y = 1 : length(years)-1
-        text(timeVect(y*12),perMonth.auto(timeVect(y*12)),num2str(years(y)),...
-            'HorizontalAlignment','center','VerticalAlignment','top')
-    end
     
     ax(4) = subplot(sp1,sp2,4);
     plot(ax(4),timeVect,perMonth.p10,'LineWidth',lw)
     title('p10')
-    for y = 1 : length(years)-1
-        text(timeVect(y*12),perMonth.p10(timeVect(y*12)),num2str(years(y)),...
-            'HorizontalAlignment','center','VerticalAlignment','top')
-    end
+    
+    set(ax(:),'XTick',1:12:timeVect(end))
+    set(ax(:),'XTickLabel',num2str(years))
     
     axis(ax(:),'tight')
     
