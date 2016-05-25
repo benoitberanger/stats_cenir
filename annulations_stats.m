@@ -242,11 +242,12 @@ end
 
 %% Plot perProtocol
 
-% 1 year = 1 graph
+protoToPlot = 'IMAGEN';
+
+
+%% 1 year = 1 graph
 if 1
-    
-    protoToPlot = 'IMAGEN';
-    
+
     figure('Name',[protoToPlot ' splitted'],'NumberTitle','off')
     
     plot_count = 0;
@@ -312,10 +313,10 @@ if 1
 end
 
 
-% 1 year = 1 line
+%% 1 year = 1 line
+
 if 1
-    
-    protoToPlot = 'IMAGEN';
+
     
     ax = zeros(4,1);
     lgd = cell(1,1);
@@ -358,6 +359,47 @@ if 1
     axis(ax(:),'tight')
     
     linkaxes(ax,'x')
+    
+end
+
+
+%% 1 line = all years
+
+if 1
+    
+    ax = zeros(4,1);
+    
+    figure('Name',[protoToPlot ' allYears'],'NumberTitle','off')
+    
+    
+    sp1 = 4 ;
+    sp2 = 1 ;
+    
+    timeVect = 1:size(allMonths.str,1);
+    
+    ax(1) = subplot(sp1,sp2,1);
+    plot(ax(1),timeVect,perProtocol.(protoToPlot).vect(:,3),'LineWidth',lw)
+    title('total')
+    
+    ax(2) = subplot(sp1,sp2,2);
+    plot(ax(2),timeVect,perProtocol.(protoToPlot).vect(:,4),'LineWidth',lw)
+    title('m10')
+    
+    ax(3) = subplot(sp1,sp2,3);
+    plot(ax(3),timeVect,perProtocol.(protoToPlot).vect(:,5),'LineWidth',lw)
+    title('auto')
+    
+    ax(4) = subplot(sp1,sp2,4);
+    plot(ax(4),timeVect,perProtocol.(protoToPlot).vect(:,6),'LineWidth',lw)
+    title('p10')
+    
+    set(ax(:),'XTick',1:12:timeVect(end))
+    set(ax(:),'XTickLabel',num2str(years))
+    
+    axis(ax(:),'tight')
+    
+    linkaxes(ax,'x')
+    
     
 end
 
@@ -529,12 +571,11 @@ if 1
 end
 
 
+%% plot all years
 
-% plot all years
 if 1
     
     ax = zeros(4,1);
-    lgd = cell(1,1);
     
     figure('Name','allYears','NumberTitle','off')
     
@@ -542,35 +583,44 @@ if 1
     sp1 = 4 ;
     sp2 = 1 ;
     
-    for y = 1 : length(years)
-        
-        timeVect = 1:size(allMonths.str,1);
-        
-        ax(1) = subplot(sp1,sp2,1);
-        hold all
-        plot(ax(1),timeVect,perMonth.total,'LineWidth',lw)
-        if y == 1 , title('total') , end
-        
-        ax(2) = subplot(sp1,sp2,2);
-        hold all
-        plot(ax(2),timeVect,perMonth.m10,'LineWidth',lw)
-        if y == 1 , title('m10') , end
-        
-        ax(3) = subplot(sp1,sp2,3);
-        hold all
-        plot(ax(3),timeVect,perMonth.auto,'LineWidth',lw)
-        if y == 1 , title('auto') , end
-        
-        ax(4) = subplot(sp1,sp2,4);
-        hold all
-        plot(ax(4),timeVect,perMonth.p10,'LineWidth',lw)
-        if y == 1 , title('p10') , end
-        
+    timeVect = 1:size(allMonths.str,1);
+    
+    ax(1) = subplot(sp1,sp2,1);
+    plot(ax(1),timeVect,perMonth.total,'LineWidth',lw)
+    title('total')
+    for y = 1 : length(years)-1
+        text(timeVect(y*12),perMonth.total(timeVect(y*12)),num2str(years(y)),...
+            'HorizontalAlignment','center','VerticalAlignment','top')
     end
-        
+    
+    ax(2) = subplot(sp1,sp2,2);
+    plot(ax(2),timeVect,perMonth.m10,'LineWidth',lw)
+    title('m10')
+    for y = 1 : length(years)-1
+        text(timeVect(y*12),perMonth.m10(timeVect(y*12)),num2str(years(y)),...
+            'HorizontalAlignment','center','VerticalAlignment','top')
+    end
+    
+    ax(3) = subplot(sp1,sp2,3);
+    plot(ax(3),timeVect,perMonth.auto,'LineWidth',lw)
+    title('auto')
+    for y = 1 : length(years)-1
+        text(timeVect(y*12),perMonth.auto(timeVect(y*12)),num2str(years(y)),...
+            'HorizontalAlignment','center','VerticalAlignment','top')
+    end
+    
+    ax(4) = subplot(sp1,sp2,4);
+    plot(ax(4),timeVect,perMonth.p10,'LineWidth',lw)
+    title('p10')
+    for y = 1 : length(years)-1
+        text(timeVect(y*12),perMonth.p10(timeVect(y*12)),num2str(years(y)),...
+            'HorizontalAlignment','center','VerticalAlignment','top')
+    end
+    
     axis(ax(:),'tight')
     
     linkaxes(ax,'x')
+    
     
 end
 
