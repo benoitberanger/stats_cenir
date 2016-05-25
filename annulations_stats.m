@@ -68,6 +68,10 @@ pd10 = 10.10;
 
 [years,~,month2year] = unique(allMonths.vect(:,1));
 
+colors = jet(length(years));
+
+lw = 2;
+
 %% Fetch protocole
 
 [C,ia,ic] = unique(txt(:,11),'stable');
@@ -238,9 +242,12 @@ end
 
 %% Plot perProtocol
 
+% 1 year = 1 graph
 if 1
     
-    protoToPlot = 'ICEBERG';
+    protoToPlot = 'IMAGEN';
+    
+    figure('Name',[protoToPlot ' splitted'],'NumberTitle','off')
     
     plot_count = 0;
     ax = zeros(length(years),4);
@@ -263,8 +270,6 @@ if 1
         allMaxes.p10 = 1;
     end
     
-    figure
-    
     for y = 1 : length(years)
         
         yearIndex = find( perProtocol.(protoToPlot).vect(:,1) == years(y) );
@@ -272,23 +277,23 @@ if 1
         
         plot_count = plot_count + 1;
         ax(y,1) = subplot(length(years),4,plot_count);
-        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,3))
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,3),'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('total') , end
         ylabel(sprintf('%d',years(y)))
         
         plot_count = plot_count + 1;
         ax(y,2) = subplot(length(years),4,plot_count);
-        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,4))
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,4),'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('m10') , end
         
         plot_count = plot_count + 1;
         ax(y,3) = subplot(length(years),4,plot_count);
-        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,5))
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,5),'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('auto') , end
         
         plot_count = plot_count + 1;
         ax(y,4) = subplot(length(years),4,plot_count);
-        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,6))
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,6),'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('p10') , end
         
     end
@@ -301,6 +306,56 @@ if 1
         ylim(ax(y,3),[0 allMaxes.auto])
         ylim(ax(y,4),[0 allMaxes.p10])
     end
+    
+    linkaxes(ax,'x')
+    
+end
+
+
+% 1 year = 1 line
+if 1
+    
+    protoToPlot = 'IMAGEN';
+    
+    ax = zeros(4,1);
+    lgd = cell(1,1);
+    
+    figure('Name',protoToPlot,'NumberTitle','off')
+    
+    sp1 = 4 ;
+    sp2 = 1 ;
+    
+    for y = 1 : length(years)
+        
+        yearIndex = find( perProtocol.(protoToPlot).vect(:,1) == years(y) );
+        timeVect = 1:length( yearIndex );
+        
+        ax(1) = subplot(sp1,sp2,1);
+        hold all
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,3),'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('total') , end
+        lgd{1} = [ lgd{1} ; num2str(years(y)) ];
+        
+        ax(2) = subplot(sp1,sp2,2);
+        hold all
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,4),'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('m10') , end
+        
+        ax(3) = subplot(sp1,sp2,3);
+        hold all
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,5),'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('auto') , end
+        
+        ax(4) = subplot(sp1,sp2,4);
+        hold all
+        plot(timeVect,perProtocol.(protoToPlot).vect(yearIndex,6),'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('p10') , end
+        
+    end
+    
+    legend(ax(1),lgd,'Location','Best');
+    
+    axis(ax(:),'tight')
     
     linkaxes(ax,'x')
     
@@ -379,12 +434,12 @@ end
 
 %% Plot perYears
 
-if 0
+if 1
     
     plot_count = 0;
     ax = zeros(length(years),4);
     
-    figure
+    figure('Name','perYear splitted','NumberTitle','off');
     
     for y = 1 : length(years)
         
@@ -392,23 +447,23 @@ if 0
         
         plot_count = plot_count + 1;
         ax(y,1) = subplot(length(years),4,plot_count);
-        plot(timeVect,perYears.(sprintf('y%d',years(y))).total)
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).total,'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('total') , end
         ylabel(sprintf('%d',years(y)))
         
         plot_count = plot_count + 1;
         ax(y,2) = subplot(length(years),4,plot_count);
-        plot(timeVect,perYears.(sprintf('y%d',years(y))).m10)
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).m10,'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('m10') , end
         
         plot_count = plot_count + 1;
         ax(y,3) = subplot(length(years),4,plot_count);
-        plot(timeVect,perYears.(sprintf('y%d',years(y))).auto)
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).auto,'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('auto') , end
         
         plot_count = plot_count + 1;
         ax(y,4) = subplot(length(years),4,plot_count);
-        plot(timeVect,perYears.(sprintf('y%d',years(y))).p10)
+        plot(timeVect,perYears.(sprintf('y%d',years(y))).p10,'LineWidth',lw,'color',colors(y,:))
         if y == 1 , title('p10') , end
         
     end
@@ -421,6 +476,99 @@ if 0
         ylim(ax(y,3),[0 max(allMaxes.auto)])
         ylim(ax(y,4),[0 max(allMaxes.p10)])
     end
+    
+    linkaxes(ax,'x')
+    
+end
+
+
+if 1
+    
+    ax = zeros(4,1);
+    lgd = cell(1,1);
+    
+    figure('Name','perYear','NumberTitle','off')
+    
+    
+    sp1 = 4 ;
+    sp2 = 1 ;
+    
+    for y = 1 : length(years)
+        
+        timeVect = 1:length(perYears.(sprintf('y%d',years(y))).total);
+        
+        ax(1) = subplot(sp1,sp2,1);
+        hold all
+        plot(ax(1),timeVect,perYears.(sprintf('y%d',years(y))).total,'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('total') , end
+        lgd{1} = [ lgd{1} ; num2str(years(y)) ];
+        
+        ax(2) = subplot(sp1,sp2,2);
+        hold all
+        plot(ax(2),timeVect,perYears.(sprintf('y%d',years(y))).m10,'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('m10') , end
+        
+        ax(3) = subplot(sp1,sp2,3);
+        hold all
+        plot(ax(3),timeVect,perYears.(sprintf('y%d',years(y))).auto,'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('auto') , end
+        
+        ax(4) = subplot(sp1,sp2,4);
+        hold all
+        plot(ax(4),timeVect,perYears.(sprintf('y%d',years(y))).p10,'LineWidth',lw,'color',colors(y,:))
+        if y == 1 , title('p10') , end
+        
+    end
+    
+    legend(ax(1),lgd,'Location','Best');
+    
+    axis(ax(:),'tight')
+    
+    linkaxes(ax,'x')
+    
+end
+
+
+
+% plot all years
+if 1
+    
+    ax = zeros(4,1);
+    lgd = cell(1,1);
+    
+    figure('Name','allYears','NumberTitle','off')
+    
+    
+    sp1 = 4 ;
+    sp2 = 1 ;
+    
+    for y = 1 : length(years)
+        
+        timeVect = 1:size(allMonths.str,1);
+        
+        ax(1) = subplot(sp1,sp2,1);
+        hold all
+        plot(ax(1),timeVect,perMonth.total,'LineWidth',lw)
+        if y == 1 , title('total') , end
+        
+        ax(2) = subplot(sp1,sp2,2);
+        hold all
+        plot(ax(2),timeVect,perMonth.m10,'LineWidth',lw)
+        if y == 1 , title('m10') , end
+        
+        ax(3) = subplot(sp1,sp2,3);
+        hold all
+        plot(ax(3),timeVect,perMonth.auto,'LineWidth',lw)
+        if y == 1 , title('auto') , end
+        
+        ax(4) = subplot(sp1,sp2,4);
+        hold all
+        plot(ax(4),timeVect,perMonth.p10,'LineWidth',lw)
+        if y == 1 , title('p10') , end
+        
+    end
+        
+    axis(ax(:),'tight')
     
     linkaxes(ax,'x')
     
