@@ -4,23 +4,26 @@ close all
 clear all
 clc
 
+md10 = 9.90;
+pd10 = 10.10;
+
 
 %% Load data
 
 filename = 'grr_annulation.csv';
 
-[num,txt,raw] = xlsread(filename);
+[annulation.num,annulation.txt,annulation.raw] = xlsread(filename);
 
 
 %% Preproc / cleanup
 
 % non-valid ID
 
-bad_ID_NaN = isnan(num(:,1));
+bad_ID_NaN = isnan(annulation.num(:,1));
 
-num = num( ~bad_ID_NaN , : );
-txt = txt( ~bad_ID_NaN , : );
-raw = raw( ~bad_ID_NaN , : );
+annulation.num = annulation.num( ~bad_ID_NaN , : );
+annulation.txt = annulation.txt( ~bad_ID_NaN , : );
+annulation.raw = annulation.raw( ~bad_ID_NaN , : );
 
 take_out_list = {
     'Protocole ';
@@ -38,15 +41,15 @@ take_out_list = {
     };
 
 for to = 1 : length(take_out_list)
-    new_list = regexprep( txt(:,11) , take_out_list{to} , '' );
-    txt(:,11) = new_list;
-    raw(:,11) = new_list;
+    new_list = regexprep( annulation.txt(:,11) , take_out_list{to} , '' );
+    annulation.txt(:,11) = new_list;
+    annulation.raw(:,11) = new_list;
 end
 
 % Invalid characters
-new_list = regexprep( txt(:,11) , '-' , '_' );
-txt(:,11) = new_list;
-raw(:,11) = new_list;
+new_list = regexprep( annulation.txt(:,11) , '-' , '_' );
+annulation.txt(:,11) = new_list;
+annulation.raw(:,11) = new_list;
 
 
 %% Unix time convertion
@@ -55,9 +58,9 @@ col_count = 0;
 for col = [2 3 4]
     
     col_count = col_count + 1;
-    %     a = cellstr( unixtime_to_datestr( num(:,col) ) )
-    txt(:,size(num,2)+col_count) = cellstr( unixtime_to_datestr( num(:,col) ) );
-    raw(:,size(num,2)+col_count) = cellstr( unixtime_to_datestr( num(:,col) ) );
+    %     a = cellstr( unixtime_to_datestr( annulation.num(:,col) ) )
+    annulation.txt(:,size(annulation.num,2)+col_count) = cellstr( unixtime_to_datestr( annulation.num(:,col) ) );
+    annulation.raw(:,size(annulation.num,2)+col_count) = cellstr( unixtime_to_datestr( annulation.num(:,col) ) );
     
 end
 
@@ -65,53 +68,213 @@ end
 %% +10j ?
 
 % Fetch
-cancel_time = num(:,2);
-start_time = num(:,3);
+cancel_time = annulation.num(:,2);
+start_time = annulation.num(:,3);
 day2sec = 60*60*24;
 
 % Compute
 diff_time = (start_time - cancel_time)/day2sec;
 
 % Fill
-num(:,size(txt,2)+1) = diff_time;
-raw(:,size(txt,2)+1) = num2cell(diff_time);
+annulation.num(:,size(annulation.txt,2)+1) = diff_time;
+annulation.raw(:,size(annulation.txt,2)+1) = num2cell(diff_time);
 
 
 %% Split data for each month
 
-% firstMonth.unix = datenum_to_unixtime( datenum(2013, 6, 1) );
+% firstMonth.unix = dateannulation.num_to_unixtime( dateannulation.num(2013, 6, 1) );
 
-allMonths = struct;
+annulation.allMonths = struct;
 
-allMonths.vect = [];
+annulation.allMonths.vect = [];
 
 counter = 0;
 for yyyy = 2010:2016
     for mm = 1:12
         counter = counter + 1;
-        allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
+        annulation.allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
     end
 end
-% allMonths.vect(1:5,:) = []; % data base starts in june 2013
-allMonths.vect(end-(12-6):end,:) = []; % data base stops in may 2016
+% annulation.allMonths.vect(1:5,:) = []; % data base starts in june 2013
+annulation.allMonths.vect(end-(12-6):end,:) = []; % data base stops in may 2016
 
-allMonths.str = datestr(allMonths.vect,'mmm_yyyy');
-allMonths.unix = datenum_to_unixtime( datenum(allMonths.vect) );
+[years,~,month2year] = unique(annulation.allMonths.vect(:,1));
+
+annulation.allMonths.str = datestr(annulation.allMonths.vect,'mmm_yyyy');
+annulation.allMonths.unix = datenum_to_unixtime( datenum(annulation.allMonths.vect) );
 
 
 %%
 
-for m = 1 : length(allMonths.unix) - 1 
+for m = 1 : length(annulation.allMonths.unix) - 1
     
-    currentMonth_idx = find( and( num(:,2) >= allMonths.unix(m) , num(:,2) < allMonths.unix(m+1) ) );
-    allMonths.data.(allMonths.str(m,:)).idx = currentMonth_idx;
-    allMonths.data.(allMonths.str(m,:)).num = num(currentMonth_idx,:);
-    allMonths.data.(allMonths.str(m,:)).txt = txt(currentMonth_idx,:);
-    allMonths.data.(allMonths.str(m,:)).raw = raw(currentMonth_idx,:);
+    currentMonth_idx = find( and( annulation.num(:,2) >= annulation.allMonths.unix(m) , annulation.num(:,2) < annulation.allMonths.unix(m+1) ) );
+    annulation.allMonths.data.(annulation.allMonths.str(m,:)).idx = currentMonth_idx;
+    annulation.allMonths.data.(annulation.allMonths.str(m,:)).num = annulation.num(currentMonth_idx,:);
+    annulation.allMonths.data.(annulation.allMonths.str(m,:)).txt = annulation.txt(currentMonth_idx,:);
+    annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw = annulation.raw(currentMonth_idx,:);
     
 end
 
 
+%% Split data for each month
+
+annulation.perMonth.total = nan( size( annulation.allMonths.str , 1) , 1 );
+annulation.perMonth.m10 = annulation.perMonth.total;
+annulation.perMonth.auto = annulation.perMonth.total;
+annulation.perMonth.p10 = annulation.perMonth.total;
+
+for m = 1 : size( annulation.allMonths.str , 1) - 1
+    
+    annulation.perMonth.total(m) = length( annulation.allMonths.data.(annulation.allMonths.str(m,:)).idx );
+    annulation.perMonth.m10(m) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,21)) < md10  );
+    
+    auto_idx = strcmp(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,10),'auto');
+    annulation.perMonth.auto(m) = sum(auto_idx);
+    
+    annulation.perMonth.p10(m) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,21)) > pd10  );
+    
+end
+
+
+%% Split data for each year
+
+annulation.perYears = struct;
+for y = 1 : length(years)
+    annulation.perYears.(sprintf('y%d',years(y))).total = annulation.perMonth.total(month2year == y);
+    annulation.perYears.(sprintf('y%d',years(y))).m10 = annulation.perMonth.m10(month2year == y);
+    annulation.perYears.(sprintf('y%d',years(y))).auto = annulation.perMonth.auto(month2year == y);
+    annulation.perYears.(sprintf('y%d',years(y))).p10 = annulation.perMonth.p10(month2year == y);
+end
+
+
+%% Fetch protocole
+
+[C,ia,ic] = unique(annulation.txt(:,11),'stable');
+
+annulation.perProtocol = struct;
+
+
+%% Make stats
+
+proto_name = C;
+
+for n = 1 : length(proto_name)
+    
+    try
+        
+        for p = 1 : length(C)
+            if regexp(C{p},proto_name{n})
+                annulation.perProtocol.(proto_name{n}).idx = p;
+            end
+        end
+        
+        % total
+        annulation.perProtocol.(proto_name{n}).total.cancel_ID = find(ic == annulation.perProtocol.(proto_name{n}).idx );
+        annulation.perProtocol.(proto_name{n}).total.count = length(annulation.perProtocol.(proto_name{n}).total.cancel_ID);
+        annulation.perProtocol.(proto_name{n}).total.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
+        
+        % manual & auto
+        annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID = zeros(0);
+        annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID = zeros(0);
+        for c = 1 : length(annulation.perProtocol.(proto_name{n}).total.cancel_ID)
+            if strcmp( annulation.raw( annulation.perProtocol.(proto_name{n}).total.cancel_ID(c) , 10 ) , 'auto' )
+                annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID = [annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID annulation.perProtocol.(proto_name{n}).total.cancel_ID(c)];
+            else
+                annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID = [annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID annulation.perProtocol.(proto_name{n}).total.cancel_ID(c)];
+            end
+        end
+        annulation.perProtocol.(proto_name{n}).total.auto.count = length(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID);
+        annulation.perProtocol.(proto_name{n}).total.auto.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.auto.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.auto.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.manual.count = length(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID);
+        annulation.perProtocol.(proto_name{n}).total.manual.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.manual.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
+        annulation.perProtocol.(proto_name{n}).total.manual.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
+        
+        % m10 p10
+        annulation.perProtocol.(proto_name{n}).total.m10 = sum(cell2mat(annulation.perProtocol.(proto_name{n}).total.raw(:,21)) < md10  );
+        annulation.perProtocol.(proto_name{n}).total.p10 = sum(cell2mat(annulation.perProtocol.(proto_name{n}).total.raw(:,21)) > pd10 );
+        
+    catch err
+        
+        warning(err.message)
+        continue
+        
+    end
+    
+end
+
+% Re-order
+annulation.perProtocol = orderfields(annulation.perProtocol);
+
+nameFields = fieldnames(annulation.perProtocol);
+countFileds = length(nameFields);
+
+
+%% Prepare annulation.ranking p10 auto m10
+
+annulation.ranking = struct;
+annulation.ranking.hdr = {'proto','total','m10','auto','p10'};
+
+% Alphabetical order
+annulation.ranking.abcd = cell(countFileds,5);
+for n = 1 : countFileds
+    
+    annulation.ranking.abcd{n,1} = nameFields{n};
+    annulation.ranking.abcd{n,2} = annulation.perProtocol.(nameFields{n}).total.count;
+    annulation.ranking.abcd{n,3} = annulation.perProtocol.(nameFields{n}).total.m10;
+    annulation.ranking.abcd{n,4} = annulation.perProtocol.(nameFields{n}).total.auto.count;
+    annulation.ranking.abcd{n,5} = annulation.perProtocol.(nameFields{n}).total.p10;
+    
+end
+
+% Total order
+[~,totalOrder] = sort( cell2mat( annulation.ranking.abcd(:,2) ) );
+totalOrder = flipud(totalOrder);
+annulation.ranking.total = annulation.ranking.abcd(totalOrder,:);
+
+% m10 order
+[~,m10Order] = sort( cell2mat( annulation.ranking.abcd(:,3) ) );
+m10Order = flipud(m10Order);
+annulation.ranking.m10 = annulation.ranking.abcd(m10Order,:);
+
+% auto order
+[~,autoOrder] = sort( cell2mat( annulation.ranking.abcd(:,4) ) );
+autoOrder = flipud(autoOrder);
+annulation.ranking.auto = annulation.ranking.abcd(autoOrder,:);
+
+% p10 order
+[~,p10Order] = sort( cell2mat( annulation.ranking.abcd(:,5) ) );
+p10Order = flipud(p10Order);
+annulation.ranking.p10 = annulation.ranking.abcd(p10Order,:);
+
+
+%% Split data for each protocol using month
+
+for n = 1 : countFileds
+    
+    annulation.perProtocol.(nameFields{n}).vect = annulation.allMonths.vect(:,1:2);
+    
+    for m = 1 : length(annulation.allMonths.unix) - 1
+        
+        protoInMonth = find( strcmp(annulation.allMonths.data.(annulation.allMonths.str(m,:)).txt(:,11),nameFields{n}) );
+        
+        annulation.perProtocol.(nameFields{n}).vect(m,3) = length( protoInMonth );
+        annulation.perProtocol.(nameFields{n}).vect(m,4) = sum( annulation.allMonths.data.(annulation.allMonths.str(m,:)).num(protoInMonth,21) < md10  );
+        annulation.perProtocol.(nameFields{n}).vect(m,5) = sum( strcmp( annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(protoInMonth,10) , 'auto' ) );
+        annulation.perProtocol.(nameFields{n}).vect(m,6) = sum( annulation.allMonths.data.(annulation.allMonths.str(m,:)).num(protoInMonth,21) > pd10  );
+        
+        
+    end
+    
+end
+
+
+
 %% Save
 
-save('annulations_data','num','txt','raw','allMonths')
+save('annulations_data','annulation','md10','pd10','years','month2year')
