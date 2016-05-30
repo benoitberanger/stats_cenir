@@ -172,11 +172,15 @@ end
 
 %% Split data for each month
 
-entry.perMonth.total = nan( size( entry.allMonths.str , 1) , 1 );
+entry.perMonth.total = nan( size( entry.allMonths.str , 1) , 2 );
 
 for m = 1 : size( entry.allMonths.str , 1) - 1
     
-    entry.perMonth.total(m) = length( entry.allMonths.data.(entry.allMonths.str(m,:)).idx );
+    PRISMA_idx = entry.allMonths.data.(entry.allMonths.str(m,:)).num(:,6) == 1;
+    entry.perMonth.total(m,1) = length( entry.allMonths.data.(entry.allMonths.str(m,:)).idx(PRISMA_idx) );
+    
+    VERIO_idx = entry.allMonths.data.(entry.allMonths.str(m,:)).num(:,6) == 19;
+    entry.perMonth.total(m,2) = length( entry.allMonths.data.(entry.allMonths.str(m,:)).idx(VERIO_idx) );
     
 end
 
@@ -185,7 +189,7 @@ end
 
 entry.perYears = struct;
 for y = 1 : length(years)
-    entry.perYears.(sprintf('y%d',years(y))).total = entry.perMonth.total(month2year == y);
+    entry.perYears.(sprintf('y%d',years(y))).total = sum(entry.perMonth.total(month2year == y,:),2);
 end
 
 

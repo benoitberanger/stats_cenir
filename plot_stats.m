@@ -1,14 +1,22 @@
 %% Init
 
 close all
-clear all
+clearvars -except annulation month2year years entry
 clc
 
 
-%% Load
+%% Load: smart method
 
-load annulations_data.mat
-load entry_data.mat
+global annulation years entry
+
+if isempty(annulation)
+    load annulations_data.mat
+end
+
+if isempty(entry)
+    load entry_data.mat
+end
+
 
 table.annulation = annulation;
 table.entry = entry;
@@ -388,7 +396,7 @@ if 1
 end
 
 
-% % 1 line = all years
+%% 1 line = all years
 
 if 1
     
@@ -428,6 +436,7 @@ if 1
     
     linkaxes(ax,'x')
     
+    legend(ax(1),{'Prisma';'Verio'},'Location','Best')
     
 end
 

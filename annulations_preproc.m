@@ -119,20 +119,36 @@ end
 
 %% Split data for each month
 
-annulation.perMonth.total = nan( size( annulation.allMonths.str , 1) , 1 );
+annulation.perMonth.total = nan( size( annulation.allMonths.str , 1) , 2 );
 annulation.perMonth.m10 = annulation.perMonth.total;
 annulation.perMonth.auto = annulation.perMonth.total;
 annulation.perMonth.p10 = annulation.perMonth.total;
 
 for m = 1 : size( annulation.allMonths.str , 1) - 1
     
-    annulation.perMonth.total(m) = length( annulation.allMonths.data.(annulation.allMonths.str(m,:)).idx );
-    annulation.perMonth.m10(m) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,21)) < md10  );
+    % Prisma
     
-    auto_idx = strcmp(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,10),'auto');
-    annulation.perMonth.auto(m) = sum(auto_idx);
+    PRISMA_idx = annulation.allMonths.data.(annulation.allMonths.str(m,:)).num(:,7) == 1;
     
-    annulation.perMonth.p10(m) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(:,21)) > pd10  );
+    annulation.perMonth.total(m,1) = length( annulation.allMonths.data.(annulation.allMonths.str(m,:)).idx(PRISMA_idx) );
+    annulation.perMonth.m10(m,1) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(PRISMA_idx,21)) < md10  );
+    
+    auto_idx = strcmp(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(PRISMA_idx,10),'auto');
+    annulation.perMonth.auto(m,1) = sum(auto_idx);
+    
+    annulation.perMonth.p10(m,1) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(PRISMA_idx,21)) > pd10  );
+    
+    % Verio
+    
+    VERIO_idx = annulation.allMonths.data.(annulation.allMonths.str(m,:)).num(:,7) == 19;
+    
+    annulation.perMonth.total(m,2) = length( annulation.allMonths.data.(annulation.allMonths.str(m,:)).idx(VERIO_idx) );
+    annulation.perMonth.m10(m,2) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(VERIO_idx,21)) < md10  );
+    
+    auto_idx = strcmp(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(VERIO_idx,10),'auto');
+    annulation.perMonth.auto(m,2) = sum(auto_idx);
+    
+    annulation.perMonth.p10(m,2) = sum(cell2mat(annulation.allMonths.data.(annulation.allMonths.str(m,:)).raw(VERIO_idx,21)) > pd10  );
     
 end
 
@@ -141,10 +157,10 @@ end
 
 annulation.perYears = struct;
 for y = 1 : length(years)
-    annulation.perYears.(sprintf('y%d',years(y))).total = annulation.perMonth.total(month2year == y);
-    annulation.perYears.(sprintf('y%d',years(y))).m10 = annulation.perMonth.m10(month2year == y);
-    annulation.perYears.(sprintf('y%d',years(y))).auto = annulation.perMonth.auto(month2year == y);
-    annulation.perYears.(sprintf('y%d',years(y))).p10 = annulation.perMonth.p10(month2year == y);
+    annulation.perYears.(sprintf('y%d',years(y))).total = sum(annulation.perMonth.total(month2year == y,:),2);
+    annulation.perYears.(sprintf('y%d',years(y))).m10 = sum(annulation.perMonth.m10(month2year == y,:),2);
+    annulation.perYears.(sprintf('y%d',years(y))).auto = sum(annulation.perMonth.auto(month2year == y,:),2);
+    annulation.perYears.(sprintf('y%d',years(y))).p10 = sum(annulation.perMonth.p10(month2year == y,:),2);
 end
 
 
