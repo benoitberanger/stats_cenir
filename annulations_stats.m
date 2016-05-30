@@ -11,6 +11,7 @@ load annulations_data.mat
 
 table.annulation = annulation;
 
+
 %% Refs
 
 ref = {...
@@ -70,7 +71,7 @@ lw = 2;
 
 %% Plot table.annulation.perProtocol
 
-protoToPlot = 'MEMENTO';
+protoToPlot = 'ICEBERG';
 
 
 %% 1 year = 1 graph

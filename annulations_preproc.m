@@ -37,7 +37,7 @@ take_out_list = {
     'Proctole';
     'Proctocole';
     'Prototocle';
-    '_avec*'
+    '_avec.*'
     };
 
 for to = 1 : length(take_out_list)
@@ -80,7 +80,7 @@ annulation.num(:,size(annulation.txt,2)+1) = diff_time;
 annulation.raw(:,size(annulation.txt,2)+1) = num2cell(diff_time);
 
 
-%% Split data for each month
+%% Prepare months containers
 
 % firstMonth.unix = dateannulation.num_to_unixtime( dateannulation.num(2013, 6, 1) );
 
@@ -104,7 +104,7 @@ annulation.allMonths.str = datestr(annulation.allMonths.vect,'mmm_yyyy');
 annulation.allMonths.unix = datenum_to_unixtime( datenum(annulation.allMonths.vect) );
 
 
-%%
+%% Fill months with raw data
 
 for m = 1 : length(annulation.allMonths.unix) - 1
     
@@ -150,54 +150,53 @@ end
 
 %% Fetch protocole
 
-[C,ia,ic] = unique(annulation.txt(:,11),'stable');
+[protoName,~,protoName2annulation] = unique_stable(annulation.txt(:,11));
 
 annulation.perProtocol = struct;
 
 
-%% Make stats
+%% Split data for protocol
 
-proto_name = C;
 
-for n = 1 : length(proto_name)
+for n = 1 : length(protoName)
     
     try
         
-        for p = 1 : length(C)
-            if regexp(C{p},proto_name{n})
-                annulation.perProtocol.(proto_name{n}).idx = p;
+        for p = 1 : length(protoName)
+            if regexp(protoName{p},protoName{n})
+                annulation.perProtocol.(protoName{n}).idx = p;
             end
         end
         
         % total
-        annulation.perProtocol.(proto_name{n}).total.cancel_ID = find(ic == annulation.perProtocol.(proto_name{n}).idx );
-        annulation.perProtocol.(proto_name{n}).total.count = length(annulation.perProtocol.(proto_name{n}).total.cancel_ID);
-        annulation.perProtocol.(proto_name{n}).total.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.cancel_ID = find(protoName2annulation == annulation.perProtocol.(protoName{n}).idx );
+        annulation.perProtocol.(protoName{n}).total.count = length(annulation.perProtocol.(protoName{n}).total.cancel_ID);
+        annulation.perProtocol.(protoName{n}).total.num = annulation.num(annulation.perProtocol.(protoName{n}).total.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.txt = annulation.txt(annulation.perProtocol.(protoName{n}).total.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.raw = annulation.raw(annulation.perProtocol.(protoName{n}).total.cancel_ID,:);
         
         % manual & auto
-        annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID = zeros(0);
-        annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID = zeros(0);
-        for c = 1 : length(annulation.perProtocol.(proto_name{n}).total.cancel_ID)
-            if strcmp( annulation.raw( annulation.perProtocol.(proto_name{n}).total.cancel_ID(c) , 10 ) , 'auto' )
-                annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID = [annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID annulation.perProtocol.(proto_name{n}).total.cancel_ID(c)];
+        annulation.perProtocol.(protoName{n}).total.auto.cancel_ID = zeros(0);
+        annulation.perProtocol.(protoName{n}).total.manual.cancel_ID = zeros(0);
+        for c = 1 : length(annulation.perProtocol.(protoName{n}).total.cancel_ID)
+            if strcmp( annulation.raw( annulation.perProtocol.(protoName{n}).total.cancel_ID(c) , 10 ) , 'auto' )
+                annulation.perProtocol.(protoName{n}).total.auto.cancel_ID = [annulation.perProtocol.(protoName{n}).total.auto.cancel_ID annulation.perProtocol.(protoName{n}).total.cancel_ID(c)];
             else
-                annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID = [annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID annulation.perProtocol.(proto_name{n}).total.cancel_ID(c)];
+                annulation.perProtocol.(protoName{n}).total.manual.cancel_ID = [annulation.perProtocol.(protoName{n}).total.manual.cancel_ID annulation.perProtocol.(protoName{n}).total.cancel_ID(c)];
             end
         end
-        annulation.perProtocol.(proto_name{n}).total.auto.count = length(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID);
-        annulation.perProtocol.(proto_name{n}).total.auto.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.auto.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.auto.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.auto.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.manual.count = length(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID);
-        annulation.perProtocol.(proto_name{n}).total.manual.num = annulation.num(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.manual.txt = annulation.txt(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
-        annulation.perProtocol.(proto_name{n}).total.manual.raw = annulation.raw(annulation.perProtocol.(proto_name{n}).total.manual.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.auto.count = length(annulation.perProtocol.(protoName{n}).total.auto.cancel_ID);
+        annulation.perProtocol.(protoName{n}).total.auto.num = annulation.num(annulation.perProtocol.(protoName{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.auto.txt = annulation.txt(annulation.perProtocol.(protoName{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.auto.raw = annulation.raw(annulation.perProtocol.(protoName{n}).total.auto.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.manual.count = length(annulation.perProtocol.(protoName{n}).total.manual.cancel_ID);
+        annulation.perProtocol.(protoName{n}).total.manual.num = annulation.num(annulation.perProtocol.(protoName{n}).total.manual.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.manual.txt = annulation.txt(annulation.perProtocol.(protoName{n}).total.manual.cancel_ID,:);
+        annulation.perProtocol.(protoName{n}).total.manual.raw = annulation.raw(annulation.perProtocol.(protoName{n}).total.manual.cancel_ID,:);
         
         % m10 p10
-        annulation.perProtocol.(proto_name{n}).total.m10 = sum(cell2mat(annulation.perProtocol.(proto_name{n}).total.raw(:,21)) < md10  );
-        annulation.perProtocol.(proto_name{n}).total.p10 = sum(cell2mat(annulation.perProtocol.(proto_name{n}).total.raw(:,21)) > pd10 );
+        annulation.perProtocol.(protoName{n}).total.m10 = sum(cell2mat(annulation.perProtocol.(protoName{n}).total.raw(:,21)) < md10  );
+        annulation.perProtocol.(protoName{n}).total.p10 = sum(cell2mat(annulation.perProtocol.(protoName{n}).total.raw(:,21)) > pd10 );
         
     catch err
         
