@@ -17,10 +17,8 @@ if isempty(entry)
     load entry_data.mat
 end
 
-
 table.annulation = annulation;
 table.entry = entry;
-
 
 
 %% Refs
