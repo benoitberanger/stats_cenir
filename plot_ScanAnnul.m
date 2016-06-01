@@ -33,11 +33,6 @@ Marker.entry = 'none';
 Marker.annulation = 'none';
 Marker.ratio = 'x';
 
-% LineStyle.total = ':';
-% LineStyle.m10 = ':';
-% LineStyle.auto = ':';
-% LineStyle.p10 = ':';
-
 Color.entry = [0 0 1];
 Color.annulation = [0 0.7 0];
 Color.ratio = [1 0 0];
@@ -87,7 +82,7 @@ plot(ax(1),...
     'Color',Color.ratio,...
     'LineWidth',LineWidth,...
     'DisplayName','RATIO');
-ylabel('Prisma + Verio')
+ylabel(ax(1),'Prisma + Verio')
 
 axes(ax(2))
 hold all
@@ -108,13 +103,13 @@ plot(ax(2),...
 ratioP = 100*(table.annulation.perMonth.m10(:,1)+table.annulation.perMonth.auto(:,1))./...
     (table.entry.perMonth.total(:,1) + table.annulation.perMonth.m10(:,1)+table.annulation.perMonth.auto(:,1));
 plot(ax(2),...
-    timeVect,ratioP,... % Prisma + Verio
+    timeVect,ratioP,... % Prisma
     'LineStyle',LineStyle.ratio,...
     'Marker',Marker.ratio,...
     'Color',Color.ratio,...
     'LineWidth',LineWidth,...
     'DisplayName','RATIO');
-ylabel('Prisma')
+ylabel(ax(2),'Prisma')
 
 axes(ax(3))
 hold all
@@ -135,19 +130,16 @@ plot(ax(3),...
 ratioV = 100*(table.annulation.perMonth.m10(:,2)+table.annulation.perMonth.auto(:,2))./...
     (table.entry.perMonth.total(:,2) + table.annulation.perMonth.m10(:,2)+table.annulation.perMonth.auto(:,2));
 plot(ax(3),...
-    timeVect,ratioV,... % Prisma + Verio
+    timeVect,ratioV,... % Verio
     'LineStyle',LineStyle.ratio,...
     'Marker',Marker.ratio,...
     'Color',Color.ratio,...
     'LineWidth',LineWidth,...
     'DisplayName','RATIO');
-ylabel('Verio')
-
+ylabel(ax(3),'Verio')
 
 % Adjustements
 
-% legend(ax(1),'Location','NorthWest')
-% legend(ax(2),'Location','NorthWest')
 legend(ax(3),'Location','NorthWest')
 
 set(ax(:),'XTick',1:12:timeVect(end))
@@ -160,6 +152,8 @@ set(ax(:),...
     'GridLineStyle',':')
 
 axis(ax(:),'tight')
+ylim(ax(2),[0 130])
+ylim(ax(3),[0 130])
 
 linkaxes(ax,'x')
 
