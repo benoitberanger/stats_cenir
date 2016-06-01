@@ -96,7 +96,7 @@ for yyyy = 2010:2016
     end
 end
 % annulation.allMonths.vect(1:5,:) = []; % data base starts in june 2013
-annulation.allMonths.vect(end-(12-6):end,:) = []; % data base stops in may 2016
+annulation.allMonths.vect(end-(12-7):end,:) = []; % data base stops in june 2016
 
 [years,~,month2year] = unique(annulation.allMonths.vect(:,1));
 
