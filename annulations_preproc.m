@@ -157,10 +157,10 @@ end
 
 annulation.perYears = struct;
 for y = 1 : length(years)
-    annulation.perYears.(sprintf('y%d',years(y))).total = sum(annulation.perMonth.total(month2year == y,:),2);
-    annulation.perYears.(sprintf('y%d',years(y))).m10 = sum(annulation.perMonth.m10(month2year == y,:),2);
-    annulation.perYears.(sprintf('y%d',years(y))).auto = sum(annulation.perMonth.auto(month2year == y,:),2);
-    annulation.perYears.(sprintf('y%d',years(y))).p10 = sum(annulation.perMonth.p10(month2year == y,:),2);
+    annulation.perYears.(sprintf('y%d',years(y))).total = annulation.perMonth.total(month2year == y,:);
+    annulation.perYears.(sprintf('y%d',years(y))).m10 = annulation.perMonth.m10(month2year == y,:);
+    annulation.perYears.(sprintf('y%d',years(y))).auto = annulation.perMonth.auto(month2year == y,:);
+    annulation.perYears.(sprintf('y%d',years(y))).p10 = annulation.perMonth.p10(month2year == y,:);
 end
 
 

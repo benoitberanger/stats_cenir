@@ -189,7 +189,7 @@ end
 
 entry.perYears = struct;
 for y = 1 : length(years)
-    entry.perYears.(sprintf('y%d',years(y))).total = sum(entry.perMonth.total(month2year == y,:),2);
+    entry.perYears.(sprintf('y%d',years(y))).total = entry.perMonth.total(month2year == y,:);
 end
 
 
