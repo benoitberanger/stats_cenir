@@ -10,11 +10,11 @@ clc
 global annulation years entry
 
 if isempty(annulation)
-    load annulations_data.mat
+    load data_annulation.mat
 end
 
 if isempty(entry)
-    load entry_data.mat
+    load data_entry.mat
 end
 
 table.annulation = annulation;
@@ -25,27 +25,27 @@ table.entry = entry;
 
 % ref = {...
 %
-% 'Créneau pilote'			'B';
-% 'Créneau confirmé'			'A';
-% 'Coupure électrique'			'C';
-% 'Maintenance matérielle'			'D';
+% 'Crï¿½neau pilote'			'B';
+% 'Crï¿½neau confirmï¿½'			'A';
+% 'Coupure ï¿½lectrique'			'C';
+% 'Maintenance matï¿½rielle'			'D';
 % 'Intervention CENIR'			'F';
-% 'Présentation de projet IRM'			'H';
-% 'Réunion d''équipe'			'P';
-% 'Spécial'			'Q';
-% 'Jour de congé'			'Z';
-% 'Congrés et déplacement pro'			'Y';
+% 'Prï¿½sentation de projet IRM'			'H';
+% 'Rï¿½union d''ï¿½quipe'			'P';
+% 'Spï¿½cial'			'Q';
+% 'Jour de congï¿½'			'Z';
+% 'Congrï¿½s et dï¿½placement pro'			'Y';
 % 'Maladie'			'X';
 % 'Fermeture exceptionnelle'			'R';
 % 'Formation'			'S';
-% 'Réunion'			'T';
-% 'Présentation de projet MEG'			'N';
-% 'Pré-réservation'			'M';
+% 'Rï¿½union'			'T';
+% 'Prï¿½sentation de projet MEG'			'N';
+% 'Prï¿½-rï¿½servation'			'M';
 % 'Cours'			'U';
-% 'Créneau indisponible'			'E';
-% 'Créneau disponible'			'I';
+% 'Crï¿½neau indisponible'			'E';
+% 'Crï¿½neau disponible'			'I';
 % 'Scan Paul Castaigne'			'G';
-% 'Présentation de projet EEG'			'O';
+% 'Prï¿½sentation de projet EEG'			'O';
 % 'Tiwi'			'J';
 % 'Panne'			'AA';
 % };

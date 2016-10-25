@@ -142,14 +142,15 @@ entry.allMonths = struct;
 entry.allMonths.vect = [];
 
 counter = 0;
-for yyyy = 2010:2016
+current_dateVect = datevec(now);
+for yyyy = 2010:current_dateVect(1)
     for mm = 1:12
         counter = counter + 1;
         entry.allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
     end
 end
-% entry.allMonths.vect(1:5,:) = []; % data base starts in june 2013
-entry.allMonths.vect(end-(12-7):end,:) = []; % data base stops in june 2016
+
+entry.allMonths.vect(end-(12-current_dateVect(2)):end,:) = []; % take out the future months
 
 [years,~,month2year] = unique(entry.allMonths.vect(:,1));
 
@@ -275,5 +276,5 @@ end
 
 %% Save
 
-save('entry_data','entry','years','month2year')
+save('data_entry','entry','years','month2year')
 

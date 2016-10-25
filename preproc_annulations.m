@@ -37,7 +37,7 @@ take_out_list = {
     'Proctole';
     'Proctocole';
     'Prototocle';
-    '_avec.*'
+    '_avec.*';
     };
 
 for to = 1 : length(take_out_list)
@@ -89,14 +89,15 @@ annulation.allMonths = struct;
 annulation.allMonths.vect = [];
 
 counter = 0;
-for yyyy = 2010:2016
+current_dateVect = datevec(now);
+for yyyy = 2010:current_dateVect(1)
     for mm = 1:12
         counter = counter + 1;
         annulation.allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
     end
 end
-% annulation.allMonths.vect(1:5,:) = []; % data base starts in june 2013
-annulation.allMonths.vect(end-(12-7):end,:) = []; % data base stops in june 2016
+
+annulation.allMonths.vect(end-(12-current_dateVect(2)):end,:) = []; % take out the future months
 
 [years,~,month2year] = unique(annulation.allMonths.vect(:,1));
 
@@ -292,4 +293,4 @@ end
 
 %% Save
 
-save('annulations_data','annulation','md10','pd10','years','month2year')
+save('data_annulation','annulation','md10','pd10','years','month2year')

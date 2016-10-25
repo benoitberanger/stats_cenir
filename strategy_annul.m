@@ -10,11 +10,11 @@ clc
 global annulation years entry
 
 if isempty(annulation)
-    load annulations_data.mat
+    load data_annulation.mat
 end
 
 if isempty(entry)
-    load entry_data.mat
+    load data_entry.mat
 end
 
 table.annulation = annulation;
