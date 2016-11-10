@@ -97,7 +97,7 @@ for yyyy = 2010:current_dateVect(1)
     end
 end
 
-annulation.allMonths.vect(end-(12-current_dateVect(2)):end,:) = []; % take out the future months
+annulation.allMonths.vect(end-(12-(current_dateVect(2)+1)):end,:) = []; % take out the future months
 
 [years,~,month2year] = unique(annulation.allMonths.vect(:,1));
 
