@@ -1,7 +1,7 @@
 %% Init
 
 close all
-clear all
+clear
 clc
 
 md10 = 9.90;
@@ -12,7 +12,11 @@ pd10 = 10.10;
 
 filename = 'grr_annulation.csv';
 
-[annulation.num,annulation.txt,annulation.raw] = xlsread(filename);
+% [annulation.num,annulation.txt,annulation.raw] = xlsread(filename);
+
+%           3;  1265102843; 1265277600; 1265281200; 0;   0;   1;   2013-06-24 15:23:41; KEVIN.NIGAUD; KEVIN.NIGAUD; Protocole PredictPGRN; A;   1 sujet; -;   -1;  0;   NULL
+pattern = {'%d' '%d'        '%d'        '%d'        '%d' '%d' '%d' '%s'                 '%s'          '%s'          '%s'                   '%s' '%s'     '%s' '%s' '%d' '%s'};
+[annulation.num,annulation.txt,annulation.raw] = importCSV( filename, pattern );
 
 
 %% Preproc / cleanup

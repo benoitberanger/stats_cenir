@@ -163,7 +163,7 @@ year.auto = nan(length(years),2);
 year.p10 = nan(length(years),2);
 
 for y = 1 : length(years)
-    
+
     year.total(y,:) = nansum(table.annulation.perYears.(sprintf('y%d',years(y))).total,1);
     year.m10(y,:) = nansum(table.annulation.perYears.(sprintf('y%d',years(y))).m10,1);
     year.auto(y,:) = nansum(table.annulation.perYears.(sprintf('y%d',years(y))).auto,1);
@@ -176,7 +176,7 @@ year.total(y+1,:) = NaN;
 year.m10(y+1,:) = NaN;
 year.auto(y+1,:) = NaN;
 year.p10(y+1,:) = NaN;
-    
+
 % timeVectYEARS = 1 : length(years);
 timeVectYEARS = 1 : length(years)+1; % stairs
 

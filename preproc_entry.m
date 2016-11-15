@@ -1,7 +1,7 @@
 %% Init
 
 close all
-clear all
+clear
 clc
 
 
@@ -9,7 +9,12 @@ clc
 
 filename = 'grr_entry.csv';
 
-[entry.num,entry.txt,entry.raw] = xlsread(filename);
+% [entry.num,entry.txt,entry.raw] = xlsread(filename);
+
+%          24;  1168846200;  1168849800; 2;   2;   1;    2009-03-18 13:40:24; KEVIN.NIGAUD;      ; KEVIN.NIGAUD;   Coupure de courant; C;                   ; -;   -1;      ; 0;    0
+%          34;  1168851600;  1168873200; 0;   0;   1;    2009-03-18 13:40:24; ADMINISTRATEUR;    ; ADMINISTRATEUR; Installation ASL;   F;   Installation du ; -;   -1;      ; 0;    0
+pattern = {'%d' '%d'         '%d'        '%d' '%d' '%d' '%s'                  '%s'          '%s'   '%s'            '%s'                '%s' '%s'              '%s' '%s' '%s'  '%d' '%d' };
+[entry.num,entry.txt,entry.raw] = importCSV( filename, pattern );
 
 
 %% Preproc / cleanup
@@ -268,7 +273,7 @@ for n = 1 : countFileds
         protoInMonth = find( strcmp(entry.allMonths.data.(entry.allMonths.str(m,:)).txt(:,11),nameFields{n}) );
         
         entry.perProtocol.(nameFields{n}).vect(m,3) = length( protoInMonth );
-
+        
     end
     
 end
