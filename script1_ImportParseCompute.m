@@ -60,6 +60,8 @@ entry.raw = entry.raw( mri_entry , : );
 
 %% Delete row we don't care
 
+update_hdr = @(x) fieldnames(x);
+
 % Annulation **************************************************************
 
 col_to_delete_a = [1 5 6 9 13 14 15 16 17];
@@ -74,15 +76,25 @@ for na = 1:length(names.a)
     col.a.(names.a{na}) = nCol.a;
 end
 
-hdr.a = fieldnames(col.a)';
+% col.a.cancel_time = 2;
+% col.a.start_time  = 3;
+% col.a.end_time    = 4;
+% col.a.room_id     = 7;
+% col.a.timestamp     = 7;
+% col.a.del_by     = 7;
+% col.a.name     = 7;
+% col.a.name     = 7;
+
+
+hdr.a = update_hdr(col.a);
 if length(hdr.a) ~= size(annulation.num,2);
     error('invalid hdr.a');
 end
-disp(hdr.a)
+
 
 % Entry *******************************************************************
 
-col_to_delete_e = [1 4 5 9 10 12 13 14 15 16 17 18];
+col_to_delete_e = [1 4 5 8 9 10 13 14 15 16 17 18];
 
 entry.num( : , col_to_delete_e ) = [];
 entry.txt( : , col_to_delete_e ) = [];
@@ -96,12 +108,112 @@ for ne = 1:length(names.e)
     col.e.(names.e{ne}) = nCol.e;
 end
 
-hdr.e = fieldnames(col.e)';
+hdr.e = update_hdr(col.e);
 if length(hdr.e) ~= size(entry.num,2);
     error('invalid hdr.e');
 end
-disp(hdr.e)
 
 
-%%
+%% Only count scans in entry
+
+type_noscan = { ...
+    'C' ;
+    'D' ;
+    'F' ;
+    'D' ;
+    'F' ;
+    'H' ;
+    'R' ;
+    'E' ;
+    'AA' ;
+    };
+for tns = 1 : length(type_noscan)
+    machine_unavailable = strcmp( entry.txt(:,col.e.type) , type_noscan{tns} );
+    entry.num = entry.num( ~machine_unavailable , : );
+    entry.txt = entry.txt( ~machine_unavailable , : );
+    entry.raw = entry.raw( ~machine_unavailable , : );
+end
+
+
+%% Clean the 'name' column to have just the name of the protocol
+
+to_clean = {
+    'Protocole ';
+    'Pilote ';
+    ' ';
+    'pilote';
+    'protocole';
+    'prototocle';
+    'protocle';
+    'Protocle';
+    'Proctole';
+    'Proctocole';
+    'Prototocle';
+    '(.*';
+    '_avec.*';
+    };
+
+for tc = 1 : length(to_clean)
+    
+    new_list_proto_a = regexprep( annulation.txt(:,col.a.name) , to_clean{tc} , '' );
+    annulation.txt(:,col.a.name) = new_list_proto_a;
+    annulation.raw(:,col.a.name) = new_list_proto_a;
+    
+    new_list_proto_e = regexprep( entry.txt(:,col.e.name) , to_clean{tc} , '' );
+    entry.txt(:,col.e.name) = new_list_proto_e;
+    entry.raw(:,col.e.name) = new_list_proto_e;
+    
+end
+
+% Invalid characters
+
+new_list_ic_a = regexprep( annulation.txt(:,col.a.name) , '-' , '_' );
+annulation.txt(:,col.a.name) = new_list_ic_a;
+annulation.raw(:,col.a.name) = new_list_ic_a;
+
+new_list_ic_e = regexprep( entry.txt(:,col.e.name) , '-' , '_' );
+entry.txt(:,col.e.name) = new_list_ic_e;
+entry.raw(:,col.e.name) = new_list_ic_e;
+
+
+%% Conversion of unix time stamp into string (mostly for diagnostic)
+
+% Annulation **************************************************************
+
+convert_a = {'cancel' 'start' 'end'};
+
+for c = 1 : length(convert_a)
+    col.a.([convert_a{c} '_time_str']) = length(hdr.a)+1; hdr.a = update_hdr(col.a);
+    new_timestap_a = cellstr( unixtime_to_datestr( annulation.num(:,col.a.([convert_a{c} '_time'])) ) );
+    annulation.txt(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
+    annulation.raw(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
+end
+
+
+% Entry *******************************************************************
+
+convert_e = {'start' 'end'};
+
+for c = 1 : length(convert_e)
+    col.e.([convert_e{c} '_time_str']) = length(hdr.e)+1; hdr.e = update_hdr(col.e);
+    new_timestap_e = cellstr( unixtime_to_datestr( entry.num(:,col.e.([convert_e{c} '_time'])) ) );
+    entry.txt(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
+    entry.raw(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
+end
+
+
+%% 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
