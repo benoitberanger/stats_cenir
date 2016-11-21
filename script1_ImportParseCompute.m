@@ -7,6 +7,8 @@ clc
 md10 = 9.90;
 pd10 = 10.10;
 
+t = struct;
+
 
 %% Load data
 
@@ -14,103 +16,77 @@ pd10 = 10.10;
 
 filename_a = 'grr_annulation.csv';
 
-% [annulation.num,annulation.txt,annulation.raw] = xlsread(filename);
+% [t.a.num,t.a.txt,t.a.raw] = xlsread(filename);
 
-%           3;  1265102843; 1265277600; 1265281200; 0;   0;   1;   2013-06-24 15:23:41; KEVIN.NIGAUD; KEVIN.NIGAUD; Protocole PredictPGRN; A;   1 sujet; -;   -1;  0;   NULL
+%             3;   1265102843; 1265277600; 1265281200; 0;   0;   1;   2013-06-24 15:23:41; KEVIN.NIGAUD; KEVIN.NIGAUD; Protocole PredictPGRN; A;   1 sujet; -;   -1;  0;   NULL
 pattern_a = {'%d' '%d'        '%d'        '%d'        '%d' '%d' '%d' '%s'                 '%s'          '%s'          '%s'                   '%s' '%s'     '%s' '%s' '%d' '%s'};
-[annulation.num,annulation.txt,annulation.raw] = importCSV( filename_a, pattern_a );
+[t.a.num,t.a.txt,t.a.raw] = importCSV( filename_a, pattern_a );
 
 
 % Entry *******************************************************************
 
 filename_e = 'grr_entry.csv';
 
-% [entry.num,entry.txt,entry.raw] = xlsread(filename);
+% [t.e.num,t.e.txt,t.e.raw] = xlsread(filename);
 
-%          24;  1168846200;  1168849800; 2;   2;   1;    2009-03-18 13:40:24; KEVIN.NIGAUD;      ; KEVIN.NIGAUD;   Coupure de courant; C;                   ; -;   -1;      ; 0;    0
-%          34;  1168851600;  1168873200; 0;   0;   1;    2009-03-18 13:40:24; ADMINISTRATEUR;    ; ADMINISTRATEUR; Installation ASL;   F;   Installation du ; -;   -1;      ; 0;    0
+%             24;  1168846200;  1168849800; 2;   2;   1;    2009-03-18 13:40:24; KEVIN.NIGAUD;      ; KEVIN.NIGAUD;   Coupure de courant; C;                   ; -;   -1;      ; 0;    0
+%             34;  1168851600;  1168873200; 0;   0;   1;    2009-03-18 13:40:24; ADMINISTRATEUR;    ; ADMINISTRATEUR; Installation ASL;   F;   Installation du ; -;   -1;      ; 0;    0
 pattern_e = {'%d' '%d'         '%d'        '%d' '%d' '%d' '%s'                  '%s'          '%s'   '%s'            '%s'                '%s' '%s'              '%s' '%s' '%s'  '%d' '%d' };
-[entry.num,entry.txt,entry.raw] = importCSV( filename_e, pattern_e );
+[t.e.num,t.e.txt,t.e.raw] = importCSV( filename_e, pattern_e );
+
+
+list = {'a','e'};
 
 
 %% Clean invalid ID
 
-% Annulation **************************************************************
-
 % non-valid ID
-bad_ID_NaN_a = isnan(annulation.num(:,1));
-annulation.num = annulation.num( ~bad_ID_NaN_a , : );
-annulation.txt = annulation.txt( ~bad_ID_NaN_a , : );
-annulation.raw = annulation.raw( ~bad_ID_NaN_a , : );
-
-% Entry *******************************************************************
-
-% non-valid ID
-bad_ID_NaN_e = isnan(entry.num(:,1));
-entry.num = entry.num( ~bad_ID_NaN_e , : );
-entry.txt = entry.txt( ~bad_ID_NaN_e , : );
-entry.raw = entry.raw( ~bad_ID_NaN_e , : );
+for l = 1 : length(list)
+    X = list{l};
+    
+    bad_ID_NaN.(X) = isnan(t.(X).num(:,1));
+    t.(X).num = t.(X).num( ~bad_ID_NaN.(X) , : );
+    t.(X).txt = t.(X).txt( ~bad_ID_NaN.(X) , : );
+    t.(X).raw = t.(X).raw( ~bad_ID_NaN.(X) , : );
+end
 
 % MRI room (only entry)
-mri_entry = or( entry.num(:,6) == 1 , entry.num(:,6) == 19 );
-entry.num = entry.num( mri_entry , : );
-entry.txt = entry.txt( mri_entry , : );
-entry.raw = entry.raw( mri_entry , : );
+mri_entry = or( t.e.num(:,6) == 1 , t.e.num(:,6) == 19 );
+t.e.num = t.e.num( mri_entry , : );
+t.e.txt = t.e.txt( mri_entry , : );
+t.e.raw = t.e.raw( mri_entry , : );
 
 
 %% Delete row we don't care
 
 update_hdr = @(x) fieldnames(x);
 
-% Annulation **************************************************************
-
-col_to_delete_a = [1 5 6 9 13 14 15 16 17];
-annulation.num( : , col_to_delete_a ) = [];
-annulation.txt( : , col_to_delete_a ) = [];
-annulation.raw( : , col_to_delete_a ) = [];
-
-nCol.a = 0;
+col_to_delete.a = [1 5 6 9 13 14 15 16 17];
 names.a = { 'cancel_time' 'start_time' 'end_time' 'room_id' 'timestamp'  'del_by'  'name' 'type' };
-for na = 1:length(names.a)
-    nCol.a = nCol.a +1;
-    col.a.(names.a{na}) = nCol.a;
-end
 
-% col.a.cancel_time = 2;
-% col.a.start_time  = 3;
-% col.a.end_time    = 4;
-% col.a.room_id     = 7;
-% col.a.timestamp     = 7;
-% col.a.del_by     = 7;
-% col.a.name     = 7;
-% col.a.name     = 7;
-
-
-hdr.a = update_hdr(col.a);
-if length(hdr.a) ~= size(annulation.num,2);
-    error('invalid hdr.a');
-end
-
-
-% Entry *******************************************************************
-
-col_to_delete_e = [1 4 5 8 9 10 13 14 15 16 17 18];
-
-entry.num( : , col_to_delete_e ) = [];
-entry.txt( : , col_to_delete_e ) = [];
-entry.raw( : , col_to_delete_e ) = [];
-
-nCol.e = 0;
-
+col_to_delete.e = [1 4 5 8 9 10 13 14 15 16 17 18];
 names.e = { 'start_time' 'end_time' 'room_id' 'timestamp' 'name' 'type' };
-for ne = 1:length(names.e)
-    nCol.e = nCol.e +1;
-    col.e.(names.e{ne}) = nCol.e;
-end
 
-hdr.e = update_hdr(col.e);
-if length(hdr.e) ~= size(entry.num,2);
-    error('invalid hdr.e');
+for l = 1 : length(list)
+    X = list{l};
+    
+    t.(X).num( : , col_to_delete.(X) ) = [];
+    t.(X).txt( : , col_to_delete.(X) ) = [];
+    t.(X).raw( : , col_to_delete.(X) ) = [];
+    
+    nCol.(X) = 0;
+    
+    for n = 1:length(names.(X))
+        nCol.(X) = nCol.(X) +1;
+        col.(X).( names.(X) {n} ) = nCol.(X);
+    end
+    
+    hdr.(X) = update_hdr(col.(X));
+    if length(hdr.(X)) ~= size(t.(X).num,2);
+        error('invalid hdr.%s',X);
+    end
+    
+    
 end
 
 
@@ -127,11 +103,12 @@ type_noscan = { ...
     'E' ;
     'AA' ;
     };
+
 for tns = 1 : length(type_noscan)
-    machine_unavailable = strcmp( entry.txt(:,col.e.type) , type_noscan{tns} );
-    entry.num = entry.num( ~machine_unavailable , : );
-    entry.txt = entry.txt( ~machine_unavailable , : );
-    entry.raw = entry.raw( ~machine_unavailable , : );
+    machine_unavailable = strcmp( t.e.txt(:,col.e.type) , type_noscan{tns} );
+    t.e.num = t.e.num( ~machine_unavailable , : );
+    t.e.txt = t.e.txt( ~machine_unavailable , : );
+    t.e.raw = t.e.raw( ~machine_unavailable , : );
 end
 
 
@@ -155,65 +132,136 @@ to_clean = {
 
 for tc = 1 : length(to_clean)
     
-    new_list_proto_a = regexprep( annulation.txt(:,col.a.name) , to_clean{tc} , '' );
-    annulation.txt(:,col.a.name) = new_list_proto_a;
-    annulation.raw(:,col.a.name) = new_list_proto_a;
+    new_list_proto_a = regexprep( t.a.txt(:,col.a.name) , to_clean{tc} , '' );
+    t.a.txt(:,col.a.name) = new_list_proto_a;
+    t.a.raw(:,col.a.name) = new_list_proto_a;
     
-    new_list_proto_e = regexprep( entry.txt(:,col.e.name) , to_clean{tc} , '' );
-    entry.txt(:,col.e.name) = new_list_proto_e;
-    entry.raw(:,col.e.name) = new_list_proto_e;
+    new_list_proto_e = regexprep( t.e.txt(:,col.e.name) , to_clean{tc} , '' );
+    t.e.txt(:,col.e.name) = new_list_proto_e;
+    t.e.raw(:,col.e.name) = new_list_proto_e;
     
 end
 
 % Invalid characters
 
-new_list_ic_a = regexprep( annulation.txt(:,col.a.name) , '-' , '_' );
-annulation.txt(:,col.a.name) = new_list_ic_a;
-annulation.raw(:,col.a.name) = new_list_ic_a;
+new_list_ic_a = regexprep( t.a.txt(:,col.a.name) , '-' , '_' );
+t.a.txt(:,col.a.name) = new_list_ic_a;
+t.a.raw(:,col.a.name) = new_list_ic_a;
 
-new_list_ic_e = regexprep( entry.txt(:,col.e.name) , '-' , '_' );
-entry.txt(:,col.e.name) = new_list_ic_e;
-entry.raw(:,col.e.name) = new_list_ic_e;
+new_list_ic_e = regexprep( t.e.txt(:,col.e.name) , '-' , '_' );
+t.e.txt(:,col.e.name) = new_list_ic_e;
+t.e.raw(:,col.e.name) = new_list_ic_e;
+
+
+%% Apply time offcet
+% Don't know why, but the unix time on the table is 2h in advance.
+
+offcet = 3600*2; % 2 hours
+
+where_a = {'cancel_time' 'start_time' 'end_time'};
+
+for c = 1 : length(where_a)
+    timeVect =  t.a.num(:,col.a.(where_a{c}));
+    t.a.num(:,col.a.(where_a{c})) = t.a.num(:,col.a.(where_a{c})) + offcet;
+    t.a.raw(:,col.a.(where_a{c})) = num2cell( t.a.num(:,col.a.(where_a{c})) );
+end
+
+where_e = {'start_time' 'end_time'};
+
+for c = 1 : length(where_e)
+    timeVect =  t.a.num(:,col.e.(where_e{c}));
+    t.e.num(:,col.e.(where_e{c})) = t.e.num(:,col.e.(where_e{c})) + offcet;
+    t.e.raw(:,col.e.(where_e{c})) = num2cell( t.e.num(:,col.e.(where_e{c})) );
+end
 
 
 %% Conversion of unix time stamp into string (mostly for diagnostic)
 
+
 % Annulation **************************************************************
 
 convert_a = {'cancel' 'start' 'end'};
-
 for c = 1 : length(convert_a)
     col.a.([convert_a{c} '_time_str']) = length(hdr.a)+1; hdr.a = update_hdr(col.a);
-    new_timestap_a = cellstr( unixtime_to_datestr( annulation.num(:,col.a.([convert_a{c} '_time'])) ) );
-    annulation.txt(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
-    annulation.raw(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
+    new_timestap_a = cellstr( unixtime_to_datestr( t.a.num(:,col.a.([convert_a{c} '_time'])) ) );
+    t.a.txt(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
+    t.a.raw(:,col.a.([convert_a{c} '_time_str'])) = new_timestap_a;
+    t.a.num(:,col.a.([convert_a{c} '_time_str'])) = nan(size(new_timestap_a));
 end
-
 
 % Entry *******************************************************************
 
 convert_e = {'start' 'end'};
-
 for c = 1 : length(convert_e)
     col.e.([convert_e{c} '_time_str']) = length(hdr.e)+1; hdr.e = update_hdr(col.e);
-    new_timestap_e = cellstr( unixtime_to_datestr( entry.num(:,col.e.([convert_e{c} '_time'])) ) );
-    entry.txt(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
-    entry.raw(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
+    new_timestap_e = cellstr( unixtime_to_datestr( t.e.num(:,col.e.([convert_e{c} '_time'])) ) );
+    t.e.txt(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
+    t.e.raw(:,col.e.([convert_e{c} '_time_str'])) = new_timestap_e;
+    t.e.num(:,col.e.([convert_e{c} '_time_str'])) = nan(size(new_timestap_e));
 end
 
 
-%% 
+%% Annulation : Delay between cancel_ and start_time ?
+
+% Fetch
+cancel_time = t.a.num(:,col.a.cancel_time);
+start_time  = t.a.num(:,col.a.start_time);
+
+day2sec = 60*60*24;
+
+% Compute
+diff_time = (start_time - cancel_time)/day2sec;
+
+% Fill
+col.a.delay_time_day = length(hdr.a)+1; hdr.a = update_hdr(col.a);
+t.a.num(:,col.a.delay_time_day) = diff_time;
+t.a.txt(:,col.a.delay_time_day) = cell(size(diff_time));
+t.a.raw(:,col.a.delay_time_day) = num2cell(diff_time);
 
 
+%% Prepare month and year splitting
+
+for l = 1: length(list)
+    X = list{l};
+    
+    t.(X).allMonths = struct;
+    
+    t.(X).allMonths.vect = [];
+    
+    counter = 0;
+    current_dateVect = datevec(now);
+    for yyyy = 2010:current_dateVect(1)
+        for mm = 1:12
+            counter = counter + 1;
+            t.(X).allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
+        end
+    end
+    
+    t.(X).allMonths.vect(end-(12-(current_dateVect(2)+1)):end,:) = []; % take out the future months
+    
+    [years,~,month2year] = unique(t.(X).allMonths.vect(:,1));
+    
+    t.(X).allMonths.str = datestr(t.(X).allMonths.vect,'mmm_yyyy');
+    t.(X).allMonths.unix = datenum_to_unixtime( datenum(t.(X).allMonths.vect) );
+    
+    
+end
 
 
+%% Fill months with raw data
 
-
-
-
-
-
-
-
-
+for l = 1: length(list)
+    X = list{l};
+    
+    for m = 1 : length(t.a.allMonths.unix) - 1
+        
+        currentMonth_idx = find( and( t.(X).num(:,col.(X).start_time) >= t.(X).allMonths.unix(m) , t.(X).num(:,col.(X).start_time) < t.(X).allMonths.unix(m+1) ) );
+        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).idx = currentMonth_idx;
+        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).num = t.(X).num(currentMonth_idx,:);
+        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).txt = t.(X).txt(currentMonth_idx,:);
+        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).raw = t.(X).raw(currentMonth_idx,:);
+        
+    end
+    
+end
 
