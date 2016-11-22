@@ -260,55 +260,79 @@ t.e.txt(:,col.e.duration) = cell(size(diff_time));
 t.e.raw(:,col.e.duration) = num2cell(diff_time);
 
 
-%% Prepare month and year splitting
+%% Prepare year splitting
 
-for l = 1: length(list)
-    X = list{l};
-    
-    t.(X).allMonths = struct;
-    
-    t.(X).allMonths.vect = [];
-    
+s = struct;
+
+current_dateVect = datevec(now);
+years = 2010:current_dateVect(1) + 1;
+
+counter = 0;
+for yyyy = years
+    counter = counter + 1;
+    s.vect(counter,:) = [ yyyy 1 1 0 0 0]; % year month day hh mm ss
+end
+
+s.str = datestr(s.vect,'yyyy');
+s.unix = datenum_to_unixtime( datenum(s.vect) );
+
+
+
+%% Prepare month splitting
+
+        
+for y = 1 : size(s.str,1) - 1
+    year = ['y' s.str(y,:)];
+        
     counter = 0;
-    current_dateVect = datevec(now);
-    for yyyy = 2010:current_dateVect(1)
-        for mm = 1:12
-            counter = counter + 1;
-            t.(X).allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0]; % year month day hh mm ss
-        end
+    
+    for mm = 1:12
+        counter = counter + 1;
+        s.year.(year).vect(counter,:) = [ s.vect(y,1) mm 1 0 0 0]; % year month day hh mm ss
     end
     
-    t.(X).allMonths.vect(end-(12-(current_dateVect(2)+1)):end,:) = []; % take out the future months
-    
-    [years,~,month2year] = unique(t.(X).allMonths.vect(:,1));
-    
-    t.(X).allMonths.str = datestr(t.(X).allMonths.vect,'mmm_yyyy');
-    t.(X).allMonths.unix = datenum_to_unixtime( datenum(t.(X).allMonths.vect) );
-    
+    s.year.(year).str = datestr(s.year.(year).vect,'mmm');
+    s.year.(year).unix = datenum_to_unixtime( datenum(s.year.(year).vect) );
     
 end
 
 
-%% Fill months with raw data
+%% Split data into years : indxes in entry and annulation
 
-for l = 1: length(list)
-    X = list{l};
+
+for y = 1 : size(s.str,1) - 1
+    year = ['y' s.str(y,:)];
     
-    for m = 1 : length(t.a.allMonths.unix) - 1
+    for l = 1 : length(list)
+        X = list{l};
         
-        currentMonth_idx = find( and( t.(X).num(:,col.(X).start_time) >= t.(X).allMonths.unix(m) , t.(X).num(:,col.(X).start_time) < t.(X).allMonths.unix(m+1) ) );
-        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).idx = currentMonth_idx;
-        for v = 1 : length(vars)
-            V = vars{v};
-            t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).(V) = t.(X).(V)(currentMonth_idx,:);
+        s.year.(year).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.unix(y) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
+        
+        for m = 1:12
+            month = s.year.(year).str(m,:);
+            if m==12
+                s.year.(year).month.(month).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
+            else
+                s.year.(year).month.(month).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.year.(year).unix(m+1) ) );
+            end
         end
+        
         
     end
     
 end
 
 
-%% Split data for each month
+%% Count N protocoles and t time for each epoch (years and month) of each categorie from each machine
+
+
+
+
+
+return
+
+
+%% 
 
 category = {'m10' 'auto' 'p10' 'total'};
 machine = {'prisma' 'verio' 'both'};
@@ -388,51 +412,6 @@ for m = 1 : size( t.a.allMonths.str , 1) - 1
     end
     
 end
-
-
-%% Split data for each year
-
-
-% perYear = struct;
-% 
-% for y = 1 : length(years)
-%     
-%     perYear.(['y' num2str(years(y))]).
-% end
-% 
-% for y = 1 : length(years)
-%     
-%     N_year_e = 0;
-%     t_year_e = 0;
-%     N_year_a = 0;
-%     t_year_a = 0;
-%     
-%     for m = 1 : size( t.a.allMonths.str , 1) - 1
-%         month = t.a.allMonths.str(m,:);
-%         
-%         isinyear = strcmp(t.a.allMonths.str(m,end-3:end),num2str(years(y)));
-%         
-%         if isinyear
-%             
-%             % Entry *******************************************************
-%             
-%             for M = 1 : length(machine)
-%                 scanner = machine{M};
-%                 
-%                 perMonth.(month).e.(scanner)
-%                 
-%             end
-%             
-%             % Annulation **************************************************
-%             
-%             
-%             
-%         end
-%         
-%     end
-%     
-%     
-% end
 
 
 %%
