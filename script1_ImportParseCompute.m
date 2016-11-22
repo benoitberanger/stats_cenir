@@ -36,7 +36,7 @@ pattern_e = {'%d' '%d'         '%d'        '%d' '%d' '%d' '%s'                  
 
 
 list = {'a','e'};
-
+vars = {'num' 'txt' 'raw'};
 
 %% Clean invalid ID
 
@@ -45,16 +45,26 @@ for l = 1 : length(list)
     X = list{l};
     
     bad_ID_NaN.(X) = isnan(t.(X).num(:,1));
-    t.(X).num = t.(X).num( ~bad_ID_NaN.(X) , : );
-    t.(X).txt = t.(X).txt( ~bad_ID_NaN.(X) , : );
-    t.(X).raw = t.(X).raw( ~bad_ID_NaN.(X) , : );
+    
+    for v = 1 : length(vars)
+        V = vars{v};
+        
+        t.(X).(V) = t.(X).(V)( ~bad_ID_NaN.(X) , : );
+        
+    end
+    
 end
 
 % MRI room (only entry)
+
 mri_entry = or( t.e.num(:,6) == 1 , t.e.num(:,6) == 19 );
-t.e.num = t.e.num( mri_entry , : );
-t.e.txt = t.e.txt( mri_entry , : );
-t.e.raw = t.e.raw( mri_entry , : );
+
+for v = 1 : length(vars)
+    V = vars{v};
+    
+    t.e.(V) = t.e.(V)( mri_entry , : );
+    
+end
 
 
 %% Delete row we don't care
@@ -70,9 +80,12 @@ names.e = { 'start_time' 'end_time' 'room_id' 'timestamp' 'name' 'type' };
 for l = 1 : length(list)
     X = list{l};
     
-    t.(X).num( : , col_to_delete.(X) ) = [];
-    t.(X).txt( : , col_to_delete.(X) ) = [];
-    t.(X).raw( : , col_to_delete.(X) ) = [];
+    for v = 1 : length(vars)
+        V = vars{v};
+        
+        t.(X).(V)( : , col_to_delete.(X) ) = [];
+        
+    end
     
     nCol.(X) = 0;
     
@@ -106,9 +119,12 @@ type_noscan = { ...
 
 for tns = 1 : length(type_noscan)
     machine_unavailable = strcmp( t.e.txt(:,col.e.type) , type_noscan{tns} );
-    t.e.num = t.e.num( ~machine_unavailable , : );
-    t.e.txt = t.e.txt( ~machine_unavailable , : );
-    t.e.raw = t.e.raw( ~machine_unavailable , : );
+    for v = 1 : length(vars)
+        V = vars{v};
+        
+        t.e.(V) = t.e.(V)( ~machine_unavailable , : );
+        
+    end
 end
 
 
@@ -219,6 +235,31 @@ t.a.txt(:,col.a.delay_time_day) = cell(size(diff_time));
 t.a.raw(:,col.a.delay_time_day) = num2cell(diff_time);
 
 
+%% Duration of the slot in hours
+
+% Annulation **************************************************************
+
+start_time  = t.a.num(:,col.a.start_time);
+end_time  = t.a.num(:,col.a.end_time);
+diff_time = (end_time - start_time)/3600; % in hours
+
+col.a.duration = length(hdr.a)+1; hdr.a = update_hdr(col.a);
+t.a.num(:,col.a.duration) = diff_time;
+t.a.txt(:,col.a.duration) = cell(size(diff_time));
+t.a.raw(:,col.a.duration) = num2cell(diff_time);
+
+% Entry *******************************************************************
+
+start_time  = t.e.num(:,col.e.start_time);
+end_time  = t.e.num(:,col.e.end_time);
+diff_time = (end_time - start_time)/3600; % in hours
+
+col.e.duration = length(hdr.e)+1; hdr.e = update_hdr(col.e);
+t.e.num(:,col.e.duration) = diff_time;
+t.e.txt(:,col.e.duration) = cell(size(diff_time));
+t.e.raw(:,col.e.duration) = num2cell(diff_time);
+
+
 %% Prepare month and year splitting
 
 for l = 1: length(list)
@@ -233,7 +274,7 @@ for l = 1: length(list)
     for yyyy = 2010:current_dateVect(1)
         for mm = 1:12
             counter = counter + 1;
-            t.(X).allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0 ];
+            t.(X).allMonths.vect(counter,:) = [ yyyy mm 1 0 0 0]; % year month day hh mm ss
         end
     end
     
@@ -257,11 +298,143 @@ for l = 1: length(list)
         
         currentMonth_idx = find( and( t.(X).num(:,col.(X).start_time) >= t.(X).allMonths.unix(m) , t.(X).num(:,col.(X).start_time) < t.(X).allMonths.unix(m+1) ) );
         t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).idx = currentMonth_idx;
-        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).num = t.(X).num(currentMonth_idx,:);
-        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).txt = t.(X).txt(currentMonth_idx,:);
-        t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).raw = t.(X).raw(currentMonth_idx,:);
+        for v = 1 : length(vars)
+            V = vars{v};
+            t.(X).allMonths.data.(t.(X).allMonths.str(m,:)).(V) = t.(X).(V)(currentMonth_idx,:);
+        end
         
     end
     
 end
 
+
+%% Split data for each month
+
+category = {'m10' 'auto' 'p10' 'total'};
+machine = {'prisma' 'verio' 'both'};
+index = {'N' 't'};
+
+perMonth = struct;
+
+% Fill the months
+for m = 1 : size( t.a.allMonths.str , 1) - 1
+    month = t.a.allMonths.str(m,:);
+    
+    % Entry ***************************************************************
+    
+    
+    PRISMA_idx.e = t.e.allMonths.data.(month).num(:,col.e.room_id) == 1;
+    VERIO_idx .e = t.e.allMonths.data.(month).num(:,col.e.room_id) == 19;
+    
+    for v = 1 : length(vars)
+        V = vars{v};
+        perMonth.(month).e.prisma.(V) = t.e.allMonths.data.(month).(V)(PRISMA_idx.e,:);
+        perMonth.(month).e.verio .(V) = t.e.allMonths.data.(month).(V)(VERIO_idx .e,:);
+        perMonth.(month).e.both  .(V) = t.e.allMonths.data.(month).(V)(PRISMA_idx.e | VERIO_idx.e,:);
+    end
+    
+    perMonth.(month).e.prisma.N = length(perMonth.(month).e.prisma.num);
+    perMonth.(month).e.prisma.t = sum   (perMonth.(month).e.prisma.num(:,col.e.duration));
+    
+    perMonth.(month).e.verio .N = length(perMonth.(month).e.verio.num);
+    perMonth.(month).e.verio .t = sum   (perMonth.(month).e.verio.num(:,col.e.duration));
+    
+    perMonth.(month).e.both  .N = perMonth.(month).e.prisma.N + perMonth.(month).e.verio.N;
+    perMonth.(month).e.both  .t = perMonth.(month).e.prisma.t + perMonth.(month).e.verio.t;
+    
+    
+    % Annulation **********************************************************
+    
+    PRISMA_idx.a = t.a.allMonths.data.(month).num(:,col.a.room_id) == 1;
+    VERIO_idx .a = t.a.allMonths.data.(month).num(:,col.a.room_id) == 19;
+    
+    auto_idx = strcmp(t.a.allMonths.data.(month).txt(:,col.a.del_by) , 'auto');
+    m10_idx  = ( t.a.allMonths.data.(month).num(:,col.a.delay_time_day) < md10 ) & ~auto_idx;
+    p10_idx  = ( t.a.allMonths.data.(month).num(:,col.a.delay_time_day) > pd10 ) & ~auto_idx;
+    
+    for v = 1 : length(vars)
+        V = vars{v};
+        
+        perMonth.(month).a_total.prisma.(V) = t.a.allMonths.data.(month).(V)( PRISMA_idx.a                           ,:);
+        perMonth.(month).a_total.verio .(V) = t.a.allMonths.data.(month).(V)( VERIO_idx .a                           ,:);
+        perMonth.(month).a_total.both  .(V) = t.a.allMonths.data.(month).(V)( PRISMA_idx.a | VERIO_idx.a             ,:);
+        
+        perMonth.(month).a_m10  .prisma.(V) = t.a.allMonths.data.(month).(V)( PRISMA_idx.a                & m10_idx  ,:);
+        perMonth.(month).a_m10  .verio .(V) = t.a.allMonths.data.(month).(V)( VERIO_idx .a                & m10_idx  ,:);
+        perMonth.(month).a_m10  .both  .(V) = t.a.allMonths.data.(month).(V)((PRISMA_idx.a | VERIO_idx.a) & m10_idx  ,:);
+        
+        perMonth.(month).a_auto .prisma.(V) = t.a.allMonths.data.(month).(V)( PRISMA_idx.a                & auto_idx ,:);
+        perMonth.(month).a_auto .verio .(V) = t.a.allMonths.data.(month).(V)( VERIO_idx .a                & auto_idx ,:);
+        perMonth.(month).a_auto .both  .(V) = t.a.allMonths.data.(month).(V)((PRISMA_idx.a | VERIO_idx.a) & auto_idx ,:);
+        
+        perMonth.(month).a_p10  .prisma.(V) = t.a.allMonths.data.(month).(V)( PRISMA_idx.a                & p10_idx  ,:);
+        perMonth.(month).a_p10  .verio .(V) = t.a.allMonths.data.(month).(V)( VERIO_idx .a                & p10_idx  ,:);
+        perMonth.(month).a_p10  .both  .(V) = t.a.allMonths.data.(month).(V)((PRISMA_idx.a | VERIO_idx.a) & p10_idx  ,:);
+        
+    end
+    
+    for c = 1 : length(category)
+        categ = ['a_' category{c}];
+        
+        perMonth.(month).(categ).prisma.N = length(perMonth.(month).(categ).prisma.num);
+        perMonth.(month).(categ).prisma.t = sum   (perMonth.(month).(categ).prisma.num(:,col.e.duration));
+        
+        perMonth.(month).(categ).verio .N = length(perMonth.(month).(categ).verio.num);
+        perMonth.(month).(categ).verio .t = sum   (perMonth.(month).(categ).verio.num(:,col.e.duration));
+        
+        perMonth.(month).(categ).both  .N = perMonth.(month).(categ).prisma.N + perMonth.(month).(categ).verio.N;
+        perMonth.(month).(categ).both  .t = perMonth.(month).(categ).prisma.t + perMonth.(month).(categ).verio.t;
+        
+    end
+    
+end
+
+
+%% Split data for each year
+
+
+% perYear = struct;
+% 
+% for y = 1 : length(years)
+%     
+%     perYear.(['y' num2str(years(y))]).
+% end
+% 
+% for y = 1 : length(years)
+%     
+%     N_year_e = 0;
+%     t_year_e = 0;
+%     N_year_a = 0;
+%     t_year_a = 0;
+%     
+%     for m = 1 : size( t.a.allMonths.str , 1) - 1
+%         month = t.a.allMonths.str(m,:);
+%         
+%         isinyear = strcmp(t.a.allMonths.str(m,end-3:end),num2str(years(y)));
+%         
+%         if isinyear
+%             
+%             % Entry *******************************************************
+%             
+%             for M = 1 : length(machine)
+%                 scanner = machine{M};
+%                 
+%                 perMonth.(month).e.(scanner)
+%                 
+%             end
+%             
+%             % Annulation **************************************************
+%             
+%             
+%             
+%         end
+%         
+%     end
+%     
+%     
+% end
+
+
+%%
+
+disp('... DONE')
