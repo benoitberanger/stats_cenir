@@ -280,20 +280,69 @@ s.unix = datenum_to_unixtime( datenum(s.vect) );
 
 %% Prepare month splitting
 
-        
+
 for y = 1 : size(s.str,1) - 1
     year = ['y' s.str(y,:)];
-        
+    
     counter = 0;
     
-    for mm = 1:12
+    for m = 1:12
         counter = counter + 1;
-        s.year.(year).vect(counter,:) = [ s.vect(y,1) mm 1 0 0 0]; % year month day hh mm ss
+        s.year.(year).vect(counter,:) = [ s.vect(y,1) m 1 0 0 0]; % year month day hh mm ss
     end
     
     s.year.(year).str = datestr(s.year.(year).vect,'mmm');
     s.year.(year).unix = datenum_to_unixtime( datenum(s.year.(year).vect) );
     
+end
+
+
+%% To make easy split, we need indxes for machines, m10, auto, p10, ...
+
+index = struct;
+
+machine = {'prisma' 'verio'};
+
+for l = 1 : length(list)
+    X = list{l};
+    
+    index.(X).prisma = t.(X).num(:,col.(X).room_id) == 1 ;
+    index.(X).verio  = t.(X).num(:,col.(X).room_id) == 19;
+    % already cleaned the table to only take PRISMA and VERIO into account
+    
+    
+    s.table.(X).N = size(t.(X).num,1);
+    s.table.(X).t = round(sum(t.(X).num( : , col.(X).duration )));
+    
+    for m = 1 : length(machine)
+        M = machine{m};
+        
+        s.table.(X).machine.(M).N = sum(index.(X).(M));
+        s.table.(X).machine.(M).t = round(sum(t.(X).num( index.(X).(M) , col.(X).duration )));
+        
+    end
+    
+end
+
+index.a.auto = strcmp(t.a.txt(:,col.a.del_by) , 'auto');
+index.a.m10  = ( t.a.num(:,col.a.delay_time_day) < md10 ) & ~index.a.auto;
+index.a.p10  = ( t.a.num(:,col.a.delay_time_day) > pd10 ) & ~index.a.auto;
+
+category = {'m10' 'auto' 'p10'};
+
+for c = 1 : length(category)
+    C = category{c} ;
+    
+    s.table.a.(C).N = sum(index.a.(C));
+    s.table.a.(C).t = round(sum(t.a.num( index.a.(C) , col.a.duration )));
+    
+    for m = 1 : length(machine)
+        M = machine{m};
+        
+        s.table.a.(C).machine.(M).N = sum(index.a.(M) & index.a.(C));
+        s.table.a.(C).machine.(M).t = round(sum(t.a.num( index.a.(M) & index.a.(C) , col.a.duration )));
+        
+    end
 end
 
 
@@ -306,19 +355,25 @@ for y = 1 : size(s.str,1) - 1
     for l = 1 : length(list)
         X = list{l};
         
-        s.year.(year).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.unix(y) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
+        s.year.(year).table.(X).idx = find( and( t.(X).num(:,col.(X).start_time) >= s.unix(y) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
+        s.year.(year).table.(X).N = length(s.year.(year).table.(X).idx);
+        s.year.(year).table.(X).t = sum( t.(X).num( s.year.(year).table.(X).idx , col.(X).duration ) );
         
         for m = 1:12
             month = s.year.(year).str(m,:);
             if m==12
-                s.year.(year).month.(month).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
+                s.year.(year).month.(month).table.(X).idx = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.unix(y+1) ) );
             else
-                s.year.(year).month.(month).idx.(X) = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.year.(year).unix(m+1) ) );
+                s.year.(year).month.(month).table.(X).idx = find( and( t.(X).num(:,col.(X).start_time) >= s.year.(year).unix(m) , t.(X).num(:,col.(X).start_time) < s.year.(year).unix(m+1) ) );
             end
+            s.year.(year).month.(month).table.(X).N = length(s.year.(year).month.(month).table.(X).idx);
+            s.year.(year).month.(month).table.(X).t = sum( t.(X).num( s.year.(year).month.(month).table.(X).idx , col.(X).duration ) );
         end
         
-        
     end
+    
+    %     s.year.(year).table.(X).a_m10.idx = s.year.(year).table.(X).idx
+    
     
 end
 
@@ -332,7 +387,7 @@ end
 return
 
 
-%% 
+%%
 
 category = {'m10' 'auto' 'p10' 'total'};
 machine = {'prisma' 'verio' 'both'};
