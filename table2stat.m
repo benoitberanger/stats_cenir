@@ -3,7 +3,7 @@ function [ s , col , hdr ] = table2stat( t , col , hdr )
 md10 = 9.90;
 pd10 = 10.10;
 
-list = fieldnames(t);
+list = {'a' 'e'};
 
 
 %% Prepare time

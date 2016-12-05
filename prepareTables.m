@@ -124,9 +124,9 @@ end
 %% Clean the 'name' column to have just the name of the protocol
 
 to_clean = {
-    'Protocole ';
-    'Pilote ';
     ' ';
+    'Protocole';
+    'Pilote';
     'pilote';
     'protocole';
     'prototocle';
@@ -135,8 +135,24 @@ to_clean = {
     'Proctole';
     'Proctocole';
     'Prototocle';
+    'Prototcole';
     '(.*';
     '_avec.*';
+    '-avec.*';
+    'avec.*';
+    'Projet';
+    'Prococole';
+    'Protocoll';
+    'Protocol';
+    'Protocome';
+    'Protoocle';
+    'Proocole';
+    'Protocoel';
+    'Procotolel';
+    'Procotole';
+    'Protocoe';
+    '^_$';
+    '^_'
     };
 
 for tc = 1 : length(to_clean)
@@ -160,6 +176,23 @@ t.a.raw(:,col.a.name) = new_list_ic_a;
 new_list_ic_e = regexprep( t.e.txt(:,col.e.name) , '-' , '_' );
 t.e.txt(:,col.e.name) = new_list_ic_e;
 t.e.raw(:,col.e.name) = new_list_ic_e;
+
+
+% Delete empty protocol name
+
+for l = 1 : length(list)
+    X = list{l};
+    
+    empty_name_idx = cellfun(@isempty, t.(X).txt(:,col.(X).name));
+    
+    for v = 1 : length(vars)
+        V = vars{v};
+        
+        t.(X).(V)( empty_name_idx , : ) = [];
+        
+    end
+
+end
 
 
 %% Apply time offcet
@@ -210,7 +243,7 @@ for c = 1 : length(convert_e)
 end
 
 
-%% Annulation : Delay between cancel_ and start_time ?
+%% Annulation : Delay between cancel_time and start_time ?
 
 % Fetch
 cancel_time = t.a.num(:,col.a.cancel_time);
