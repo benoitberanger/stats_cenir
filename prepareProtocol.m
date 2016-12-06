@@ -24,7 +24,7 @@ mri_entry = or( t.p.num(:,3) == 1 , t.p.num(:,3) == 19 );
 for v = 1 : length(vars)
     V = vars{v};
     
-    t.p.(V) = t.p.(V)( mri_entry , : );
+    t.(X).(V) = t.(X).(V)( mri_entry , : );
     
 end
 

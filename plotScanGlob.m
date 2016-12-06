@@ -1,11 +1,10 @@
-function plotAnnulGlob
-
+function plotScanGlob
 
 %% Import, parse, prepare
 
 [ t , col , hdr ] = prepareTables;
-list = fieldnames(t);
-vars = {'num' 'txt' 'raw'};
+% list = fieldnames(t);
+% vars = {'num' 'txt' 'raw'};
 
 
 %% Stats
@@ -13,7 +12,7 @@ vars = {'num' 'txt' 'raw'};
 [ s , col , hdr ] = table2stat( t , col , hdr );
 
 current_dateVect = datevec(now);
-% years = 2010:current_dateVect(1);
+years = 2010:current_dateVect(1);
 
 
 %% Add one year so the stair() function will be look better
@@ -38,7 +37,7 @@ Color.N = [0 0.7 0];
 LineWidth = 2;
 
 
-% Years in line
+%% Years in line
 
 figure('Name','Global, per year, time serie','NumberTitle','off')
 
@@ -91,5 +90,61 @@ set(ax(2),...
 % axis(ax(:),'tight')
 xlim(ax(1),[1 size(s.Ty,1)])
 xlim(ax(2),[1 size(s.Tm,1)+1])
+
+
+%% How many hours in total ?
+
+fprintf('\n total hours scanned @ Trio/Prisma = %d \n',sum(s.Tm(:,col.res.prisma_e)));
+fprintf('\n total hours scanned @ Verio = %d \n',sum(s.Tm(:,col.res.verio_e)));
+fprintf('\n total hours scanned = %d \n',sum(s.Tm(:,col.res.prisma_e) + s.Tm(:,col.res.verio_e)));
+
+
+%% Supperposed years
+
+figure('Name','Global, per year, supperposed years','NumberTitle','off')
+hold all
+
+myColors = Jet(length(years));
+
+all = zeros(12,1);
+
+for y = 1 : length(years)
+    
+    idx = s.Tm(:,col.res.year) == years(y);
+    
+    currentcurve = s.Tm(idx,col.res.prisma_e) + s.Tm(idx,col.res.verio_e);
+    all = all + currentcurve;
+    
+    plot(1:12,...
+        currentcurve,...
+        'LineStyle',LineStyle.T,...
+        'Marker',Marker.T,...
+        'Color',myColors(y,:),...
+        'LineWidth',LineWidth,...
+        'DisplayName',num2str(years(y)));
+    
+end
+
+all = all / length(years);
+plot(1:12,...
+        all,...
+        'LineStyle','--',...
+        'Color','black',...
+        'LineWidth',LineWidth,...
+        'DisplayName','mean');
+legend(gca,'Location','best');
+
+axis tight
+title('hours')
+
+set(gca,'XTick',1:12)
+set(gca,'XTickLabel',{'J' 'F' 'M' 'A' 'M' 'J' 'J' 'A' 'S' 'O' 'N' 'D'})
+set(gca,...
+    'XGrid','on',...
+    'YGrid','on',...
+    'XMinorGrid','off',...
+    'YMinorGrid','off',...
+    'GridLineStyle',':')
+
 
 end % function
