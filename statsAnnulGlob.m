@@ -19,7 +19,7 @@ proto_list = t.p.txt(:,col.p.eid);
 current_dateVect = datevec(now);
 years = 2010:current_dateVect(1);
 
-hdr.o = {'protocol' 'total' 'annul' 'tx'};
+hdr.o = {'protocol' 'total' 'annul' 'tx' 'm10' 'auto' 'p10'};
 
 for y = 1 : length(years)
     yxxxx = sprintf('y%d',years(y));
@@ -62,9 +62,12 @@ for p = 1 : length(proto_list)
         annul = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.prisma_m10 col.res.prisma_p10 col.res.verio_auto col.res.verio_m10 col.res.verio_p10 ] ) );
         tx = 100 * annul/(scan + annul);
         tx = round(tx);
+        m10 = sum( s_proto.Ty( y , [col.res.prisma_m10 col.res.verio_m10] ) );
+        auto = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.verio_auto] ) );
+        p10 = sum( s_proto.Ty( y , [col.res.prisma_p10 col.res.verio_p10] ) );
         
         o.(yxxxx){p,1} = proto_name_nm;
-        o.(yxxxx)(p,2:end) = num2cell([scan+annul annul tx]);
+        o.(yxxxx)(p,2:end) = num2cell([scan+annul annul tx m10 auto p10]);
         
     end
     
@@ -77,13 +80,14 @@ for y = 1 : length(years)
     yxxxx = sprintf('y%d',years(y));
     
     % Deleta tx = nan
-    nan_idx = cellfun(@isnan,o.(yxxxx)(:,end));
-    o.(yxxxx)(nan_idx,end)=repmat({0},[sum(nan_idx) 1]);
+    nan_idx = cellfun(@isnan,o.(yxxxx)(:,4));
+    o.(yxxxx)(nan_idx,4)=repmat({0},[sum(nan_idx) 1]);
     
-    for r = 1 : 3
-    % Sorty by : demand=2, cancel=3, ratio=4
-    [~,IX] = sort(cell2mat(o.(yxxxx)(:,r+1)),'descend');
-    o.(yxxxx)( : , [1 2 3 4]+ 4*(r-1) ) = o.(yxxxx)(IX,1:4);
+    cols = size(o.(yxxxx),2);
+    for r = 1 : cols-1
+        % Sorty by : demand=2, cancel=3, ratio=4; ...
+        [~,IX] = sort(cell2mat(o.(yxxxx)(:,r+1)),'descend');
+        o.(yxxxx)( : , [1:cols] + cols*(r-1) ) = o.(yxxxx)(IX,1:cols);
     end
     
     
