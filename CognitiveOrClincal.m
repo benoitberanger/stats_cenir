@@ -1,7 +1,5 @@
-% function [ o ] = CognitiveOrClincal
-close all
-clear
-clc
+function [ o ] = CognitiveOrClincal
+
 
 %% Import, parse, prepare
 
@@ -137,8 +135,31 @@ for c = 1 : size(catList,1)
     
 end
 
-o.header = {'protocol' 'total (h)' 'annul (h)' 'tx (%)'};
-o.order_by = { 'total (h)' , 'annul (h)' , 'tx (%)'};
+o.header = { 'protocol' 'total (h)' 'annul (h)' 'tx (%)' '-10j' 'auto' '+10j' };
+o.order_by = { 'total (h)' 'annul (h)' 'tx (%)' '-10j' 'auto' '+10j' };
 
 
-% end % function
+%% Sumup
+
+sumup = nan(length(years),size(catList,1)*2);
+sumup_hdr = {'année' 'clinique N' 'clinique Tps' 'cognitif N' 'cognitif Tps' 'phamaco N' 'phamaco Tps' 'methodo N' 'methodo Tps' 'anat_TMS N' 'anat_MEG Tps' 'anat_TMS N' 'anat_MEG Tps'};
+
+for c = 1 : size(catList,1)
+    C = catList{c};
+    
+    for y = 1:size(s_proto.Ty,1)
+        yxxxx = sprintf('y%d',years(y));
+        
+        sumup(y,2*c-1) = size(o.(yxxxx).(C),1);
+        sumup(y,2*c) = sum( cell2mat(o.(yxxxx).(C)(:,2)) );
+        
+    end
+    
+end
+
+o.sumup =[ sumup_hdr ; num2cell([years' sumup]) ];
+
+disp( o.sumup )
+
+
+end % function
