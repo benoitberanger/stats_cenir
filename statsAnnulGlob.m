@@ -77,6 +77,7 @@ for p = 1 : length(proto_list)
         annul = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.prisma_m10 col.res.prisma_p10 col.res.verio_auto col.res.verio_m10 col.res.verio_p10 ] ) );
         tx = 100 * annul/(scan + annul);
         tx = round(tx);
+        if isnan(tx); tx = 0; end;
         m10 = sum( s_proto.Ty( y , [col.res.prisma_m10 col.res.verio_m10] ) );
         auto = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.verio_auto] ) );
         p10 = sum( s_proto.Ty( y , [col.res.prisma_p10 col.res.verio_p10] ) );
@@ -105,14 +106,13 @@ for y = 1 : length(years)
     nan_idx = cellfun(@isnan,o.(yxxxx)(:,4));
     o.(yxxxx)(nan_idx,4)=repmat({0},[sum(nan_idx) 1]);
     
-    cols = size(o.(yxxxx),2);
-    for r = 1 : cols-3
+    cols = [4 5 6];
+    for r = 1 : length(cols)
         % Sorty by : demand=4, cancel=5, ratio=6; ...
-        [~,IX] = sort(cell2mat(o.(yxxxx)(:,r+3)),'descend');
-        o.(yxxxx)( : , [1:cols] + cols*(r-1) ) = o.(yxxxx)(IX,1:cols);
+        [~,IX] = sort(cell2mat(o.(yxxxx)(:,cols(r))),'descend');
+        o.(yxxxx)( : , [1:cols(end)] + cols(end)*(r-1) ) = o.(yxxxx)(IX,1:cols(end));
     end
-    
-    
+     
 end
 
 o.header = {'protocol' 'total (h)' 'annul (h)' 'tx (%)'};
