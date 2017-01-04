@@ -96,6 +96,7 @@ for c = 1 : size(catList,1)
                 annul = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.prisma_m10 col.res.prisma_p10 col.res.verio_auto col.res.verio_m10 col.res.verio_p10 ] ) );
                 tx = 100 * annul/(scan + annul);
                 tx = round(tx);
+                if isnan(tx); tx = 0; end;
                 m10 = sum( s_proto.Ty( y , [col.res.prisma_m10 col.res.verio_m10] ) );
                 auto = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.verio_auto] ) );
                 p10 = sum( s_proto.Ty( y , [col.res.prisma_p10 col.res.verio_p10] ) );
@@ -118,9 +119,9 @@ for c = 1 : size(catList,1)
         empty_idx = cellfun(@isempty,o.(yxxxx).(C)(:,1));
         o.(yxxxx).(C)(empty_idx,:)=[];
         
-        % Deleta tx = nan
-        nan_idx = cellfun(@isnan,o.(yxxxx).(C)(:,4));
-        o.(yxxxx).(C)(nan_idx,4)=repmat({0},[sum(nan_idx) 1]);
+        %         % Deleta tx = nan
+        %         nan_idx = cellfun(@isnan,o.(yxxxx).(C)(:,4));
+        %         o.(yxxxx).(C)(nan_idx,4)=repmat({0},[sum(nan_idx) 1]);
         
         cols = size(o.(yxxxx).(C),2);
         for r = 1 : cols-1
@@ -142,7 +143,7 @@ o.order_by = { 'total (h)' 'annul (h)' 'tx (%)' '-10j' 'auto' '+10j' };
 %% Sumup
 
 sumup = nan(length(years),size(catList,1)*2);
-sumup_hdr = {'année' 'clinique N' 'clinique Tps' 'cognitif N' 'cognitif Tps' 'phamaco N' 'phamaco Tps' 'methodo N' 'methodo Tps' 'anat_TMS N' 'anat_MEG Tps' 'anat_TMS N' 'anat_MEG Tps'};
+sumup_hdr = {'année' 'clinique N' 'clinique Tps' 'cognitif N' 'cognitif Tps' 'phamaco N' 'phamaco Tps' 'methodo N' 'methodo Tps' 'anat_TMS N' 'anat_TMS Tps' 'anat_MEG N' 'anat_MEG Tps'};
 
 for c = 1 : size(catList,1)
     C = catList{c};
@@ -161,5 +162,60 @@ o.sumup =[ sumup_hdr ; num2cell([years' sumup]) ];
 
 disp( o.sumup )
 
+
+%% Type synthesis
+
+o.type_hdr = {'année' 'N' 'Total(h)' 'Annulé(h)' 'RatioAnnul(%)' 'Scanné(h)' '-10j(%)' 'auto(%)' '+10j(%)'};
+o.type = struct;
+
+for c = 1 : size(catList,1)
+    C = catList{c};
+    
+    o.type.(C) = nan(length(years),length(o.type_hdr));
+    
+    for y = 1:length(years)
+        yxxxx = sprintf('y%d',years(y));
+        
+        o.type.(C)(y,1) = years(y);
+        o.type.(C)(y,2) = size( o.(yxxxx).(C) , 1 );
+        sumTotal = sum( cell2mat(o.(yxxxx).(C)(:,2)) , 1 );
+        if sumTotal>0
+            o.type.(C)(y,3) = sumTotal;
+        else
+            o.type.(C)(y,3) = 0;
+        end
+        sumAnnul = sum( cell2mat(o.(yxxxx).(C)(:,3)) , 1 );
+        if sumAnnul>0
+            o.type.(C)(y,4) = sumAnnul;
+        else
+            o.type.(C)(y,4) = 0;
+        end
+        o.type.(C)(y,5) = round(100 * o.type.(C)(y,4)/o.type.(C)(y,3));
+        o.type.(C)(y,6) = o.type.(C)(y,3) - o.type.(C)(y,4);
+        sumM10 = sum( cell2mat(o.(yxxxx).(C)(:,5)) , 1 );
+        if sumM10>0
+            o.type.(C)(y,7) = round(100 * sumM10/o.type.(C)(y,4));
+        else
+            o.type.(C)(y,7) = 0;
+        end
+        sumauto = sum( cell2mat(o.(yxxxx).(C)(:,6)) , 1 );
+        if sumauto>0
+            o.type.(C)(y,8) = round(100 * sumauto/o.type.(C)(y,4));
+        else
+            o.type.(C)(y,7) = 0;
+        end
+        sumP10 = sum( cell2mat(o.(yxxxx).(C)(:,7)) , 1 );
+        if sumP10>0
+            o.type.(C)(y,9) = round(100 * sumP10/o.type.(C)(y,4));
+        else
+            o.type.(C)(y,9) = 0;
+        end
+        
+    end
+    
+    disp(C)
+    disp([o.type_hdr ; num2cell(o.type.(C))])
+    
+end
 
 end % function
