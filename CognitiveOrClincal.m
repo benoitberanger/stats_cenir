@@ -11,7 +11,7 @@ vars = {'num' 'txt' 'raw'};
 %% Import protocol list
 
 [ t.p , col.p , hdr.p ] = prepareProtocol;
-proto_list = t.p.txt(:,col.p.eid);
+% proto_list = t.p.txt(:,col.p.eid);
 
 repList = {
     '1' 'clinique'

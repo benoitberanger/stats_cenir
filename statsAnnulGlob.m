@@ -13,13 +13,28 @@ vars = {'num' 'txt' 'raw'};
 [ t.p , col.p , hdr.p ] = prepareProtocol;
 proto_list = t.p.txt(:,col.p.eid);
 
+repList = {
+    '1' 'clinique'
+    '2' 'cognitif'
+    '3' 'pharmaco'
+    '4' 'methodo'
+    '5' 'anat-TMS'
+    '6' 'anat-MEG'
+    'anat-TMS' 'anat_TMS'
+    'anat-MEG' 'anat_MEG'
+    };
+
+for r = 1 : size(repList,1)
+    t.p.raw(:,col.p.type) = regexprep( t.p.raw(:,col.p.type) , repList{r,1} , repList{r,2} );
+end
+
 
 %% Fetch data for each proto
 
 current_dateVect = datevec(now);
 years = 2010:current_dateVect(1);
 
-hdr.o = {'protocol' 'total' 'annul' 'tx' 'm10' 'auto' 'p10'};
+hdr.o = {'protocol' 'type' 'machine' 'total' 'annul' 'tx' 'm10' 'auto' 'p10'};
 
 for y = 1 : length(years)
     yxxxx = sprintf('y%d',years(y));
@@ -67,7 +82,14 @@ for p = 1 : length(proto_list)
         p10 = sum( s_proto.Ty( y , [col.res.prisma_p10 col.res.verio_p10] ) );
         
         o.(yxxxx){p,1} = proto_name_nm;
-        o.(yxxxx)(p,2:end) = num2cell([scan+annul annul tx m10 auto p10]);
+        o.(yxxxx){p,2} = t.p.raw{p,col.p.type};
+        switch t.p.num(p,col.p.rid)
+            case 1
+                o.(yxxxx){p,3} = 'Prisma';
+            case 19
+                o.(yxxxx){p,3} = 'Verio';
+        end
+        o.(yxxxx)(p,4:end) = num2cell([scan+annul annul tx m10 auto p10]);
         
     end
     
@@ -84,9 +106,9 @@ for y = 1 : length(years)
     o.(yxxxx)(nan_idx,4)=repmat({0},[sum(nan_idx) 1]);
     
     cols = size(o.(yxxxx),2);
-    for r = 1 : cols-1
-        % Sorty by : demand=2, cancel=3, ratio=4; ...
-        [~,IX] = sort(cell2mat(o.(yxxxx)(:,r+1)),'descend');
+    for r = 1 : cols-3
+        % Sorty by : demand=4, cancel=5, ratio=6; ...
+        [~,IX] = sort(cell2mat(o.(yxxxx)(:,r+3)),'descend');
         o.(yxxxx)( : , [1:cols] + cols*(r-1) ) = o.(yxxxx)(IX,1:cols);
     end
     
