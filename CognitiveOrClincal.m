@@ -190,7 +190,7 @@ for c = 1 : size(catList,1)
         else
             o.type.(C)(y,4) = 0;
         end
-        o.type.(C)(y,5) = round(100 * o.type.(C)(y,4)/o.type.(C)(y,3));
+        o.type.(C)(y,5) = round(100 * o.type.(C)(y,4)/o.type.(C)(y,3)); % if isnan(o.type.(C)(y,5)); o.type.(C)(y,5) = 0; end;
         o.type.(C)(y,6) = o.type.(C)(y,3) - o.type.(C)(y,4);
         sumM10 = sum( cell2mat(o.(yxxxx).(C)(:,5)) , 1 );
         if sumM10>0
@@ -202,7 +202,7 @@ for c = 1 : size(catList,1)
         if sumauto>0
             o.type.(C)(y,8) = round(100 * sumauto/o.type.(C)(y,4));
         else
-            o.type.(C)(y,7) = 0;
+            o.type.(C)(y,8) = 0;
         end
         sumP10 = sum( cell2mat(o.(yxxxx).(C)(:,7)) , 1 );
         if sumP10>0
@@ -217,5 +217,90 @@ for c = 1 : size(catList,1)
     disp([o.type_hdr ; num2cell(o.type.(C))])
     
 end
+
+
+%% Type proportions
+
+for y = 1:length(years)
+    yxxxx = sprintf('y%d',years(y));
+    totals.(yxxxx).N = 0;
+    totals.(yxxxx).Total = 0;
+    totals.(yxxxx).Annul = 0;
+    %
+    totals.(yxxxx).Scan = 0;
+    totals.(yxxxx).m10 = 0;
+    totals.(yxxxx).auto = 0;
+    totals.(yxxxx).p10 = 0;
+end
+
+for c = 1 : size(catList,1)
+    C = catList{c};
+    
+    for y = 1:length(years)
+        yxxxx = sprintf('y%d',years(y));
+        
+        totals.(yxxxx).N = totals.(yxxxx).N + o.type.(C)(y,2);
+        totals.(yxxxx).Total = totals.(yxxxx).Total + o.type.(C)(y,3);
+        totals.(yxxxx).Annul = totals.(yxxxx).Annul + o.type.(C)(y,4);
+        %
+        totals.(yxxxx).Scan = totals.(yxxxx).Scan + o.type.(C)(y,6);
+        sumM10 = sum( cell2mat(o.(yxxxx).(C)(:,5)) , 1 );
+        if isempty(sumM10)
+            sumM10 = 0;
+        end
+        sumauto = sum( cell2mat(o.(yxxxx).(C)(:,6)) , 1 );
+        if isempty(sumauto)
+            sumauto = 0;
+        end
+        sumP10 = sum( cell2mat(o.(yxxxx).(C)(:,7)) , 1 );
+        if isempty(sumP10)
+            sumP10 = 0;
+        end
+        totals.(yxxxx).m10 = totals.(yxxxx).m10 + sumM10;
+        totals.(yxxxx).auto = totals.(yxxxx).auto + sumauto;
+        totals.(yxxxx).p10 = totals.(yxxxx).p10 + sumP10;
+        
+    end
+end
+
+totals_arr = struct2array(totals);
+
+o.prop_hdr = {'année' 'N(%)' 'Total(%)' 'Annulé(%)' 'Scanné(%)' '-10j(%)' 'auto(%)' '+10j(%)'};
+o.prop = struct;
+
+for c = 1 : size(catList,1)
+    C = catList{c};
+    
+    for y = 1:length(years)
+        yxxxx = sprintf('y%d',years(y));
+        
+        o.prop.(C)(y,1) = years(y);
+        o.prop.(C)(y,2) = round(100 * o.type.(C)(y,2)/totals.(yxxxx).N );
+        o.prop.(C)(y,3) = round(100 * o.type.(C)(y,3)/totals.(yxxxx).Total );
+        o.prop.(C)(y,4) = round(100 * o.type.(C)(y,4)/totals.(yxxxx).Annul );
+        o.prop.(C)(y,5) = round(100 * o.type.(C)(y,6)/totals.(yxxxx).Scan );
+        sumM10 = sum( cell2mat(o.(yxxxx).(C)(:,5)) , 1 );
+        if isempty(sumM10)
+            sumM10 = 0;
+        end
+        o.prop.(C)(y,6) = round(100 * sumM10/totals.(yxxxx).m10 );
+        sumauto = sum( cell2mat(o.(yxxxx).(C)(:,6)) , 1 );
+        if isempty(sumauto)
+            sumauto = 0;
+        end
+        o.prop.(C)(y,7) = round(100 * sumauto/totals.(yxxxx).auto );
+        sumP10 = sum( cell2mat(o.(yxxxx).(C)(:,7)) , 1 );
+        if isempty(sumP10)
+            sumP10 = 0;
+        end
+        o.prop.(C)(y,8) = round(100 * sumP10/totals.(yxxxx).p10 );
+        
+    end
+    
+    disp(C)
+    disp([o.prop_hdr ; num2cell(o.prop.(C))])
+    
+end
+
 
 end % function
