@@ -126,7 +126,7 @@ figure('Name','Global, per year, supperposed years','NumberTitle','off')
 hold all
 title('hours on the planning  : Prisma + Verio')
 
-myColors = Jet(length(years));
+myColors = jet(length(years));
 
 all = zeros(12,1);
 
