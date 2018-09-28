@@ -7,7 +7,7 @@ function [ num, txt, raw ] = importCSV( filename, pattern )
 
 fileID = fopen(filename, 'r');
 str = fread(fileID, '*char')';
-fclose('all');
+fclose(fileID);
 
 
 %% Reverse bulshit introduced by the CSV generator on phpMyAdmin SQL
