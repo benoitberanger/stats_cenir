@@ -7,6 +7,13 @@ clc
 
 op = prepareOP;
 
+% Only keep the payed ones
+
+fc = strcmp(op(:,4),'5');
+op = op(fc,:);
+
+%%
+
 op_list_proto = op(:,3);
 res = regexp(op_list_proto,'\w{2}_CENIR_IH_([a-zA-Z0-9-_]+)_\w\d{2}_(\d{4})','tokens');
 cant_find_proto_name = cellfun(@isempty,res);
@@ -19,7 +26,7 @@ res(cant_find_proto_name) = [];
 N = length(res);
 
 h = {'proto' 'year' 'amount'};
-data = cell(N,4);
+proto = cell(N,4);
 
 for i = 1 : N
     
