@@ -96,7 +96,7 @@ for c = 1 : size(catList,1)
                 annul = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.prisma_m10 col.res.prisma_p10 col.res.verio_auto col.res.verio_m10 col.res.verio_p10 ] ) );
                 tx = 100 * annul/(scan + annul);
                 tx = round(tx);
-                if isnan(tx); tx = 0; end;
+                if isnan(tx); tx = 0; end
                 m10 = sum( s_proto.Ty( y , [col.res.prisma_m10 col.res.verio_m10] ) );
                 auto = sum( s_proto.Ty( y , [col.res.prisma_auto col.res.verio_auto] ) );
                 p10 = sum( s_proto.Ty( y , [col.res.prisma_p10 col.res.verio_p10] ) );
@@ -142,8 +142,8 @@ o.order_by = { 'total (h)' 'annul (h)' 'tx (%)' '-10j' 'auto' '+10j' };
 
 %% Sumup
 
-sumup = nan(length(years),size(catList,1)*2);
-sumup_hdr = {'année' 'clinique N' 'clinique Tps' 'cognitif N' 'cognitif Tps' 'phamaco N' 'phamaco Tps' 'methodo N' 'methodo Tps' 'anat_TMS N' 'anat_TMS Tps' 'anat_MEG N' 'anat_MEG Tps'};
+sumup = zeros(length(years),size(catList,1)*2);
+sumup_hdr = {'année' 'clinique N' 'clinique Tps' 'cognitif N' 'cognitif Tps' 'phamaco N' 'phamaco Tps' 'methodo N' 'methodo Tps' 'anat_TMS N' 'anat_TMS Tps' 'anat_MEG N' 'anat_MEG Tps' 'total N'};
 
 for c = 1 : size(catList,1)
     C = catList{c};
@@ -157,6 +157,8 @@ for c = 1 : size(catList,1)
     end
     
 end
+
+sumup(:,size(catList,1)*2+1) = sum(sumup(:,1:2:end),2);
 
 o.sumup =[ sumup_hdr ; num2cell([years' sumup]) ];
 
